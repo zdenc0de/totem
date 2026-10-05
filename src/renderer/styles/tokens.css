@@ -1,0 +1,20 @@
+:root {
+  /* Identidad (CLAUDE.md §14). POR CONFIRMAR: el manual también menciona RGB 172, 20, 18. */
+  --rojo: #ac141c;
+  --azul: #0c53a2;
+  --azul-oscuro: #083a73;
+  --dorado: #f2b705;
+  --blanco: #ffffff;
+  --negro: #000000;
+  --texto-suave: rgba(255, 255, 255, 0.8);
+
+  /* Century Gothic solo si el cliente entrega los archivos con licencia; mientras, Poppins local. */
+  --fuente: 'Poppins', 'Segoe UI', sans-serif;
+
+  --artboard-w: 1080px;
+  --artboard-h: 1920px;
+  --gutter: 72px;
+
+  --boton-alto: 112px;
+  --radio: 28px;
+}
