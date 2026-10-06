@@ -6,6 +6,7 @@ export type Pantalla = 'idle' | 'registro' | 'quiz' | 'calculando' | 'boleto' | 
 
 export type DatosRegistro = {
   nombre: string
+  apellido: string
   email: string
   telefono: string
   aceptoPrivacidad: boolean

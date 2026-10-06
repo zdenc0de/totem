@@ -7,6 +7,7 @@
   --blanco: #ffffff;
   --negro: #000000;
   --texto-suave: rgba(255, 255, 255, 0.8);
+  --error: #ffb4b4;
 
   /* Century Gothic solo si el cliente entrega los archivos con licencia; mientras, Poppins local. */
   --fuente: 'Poppins', 'Segoe UI', sans-serif;

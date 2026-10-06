@@ -94,3 +94,219 @@ p {
   background: var(--blanco);
   color: var(--azul);
 }
+
+/* Se ve deshabilitado pero sigue recibiendo el toque (p. ej. para mostrar qué falta). */
+.boton[aria-disabled='true'] {
+  opacity: 0.4;
+}
+
+/* Formularios */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.campo__etiqueta {
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.campo__input {
+  height: var(--boton-alto);
+  padding: 0 36px;
+  border: 5px solid transparent;
+  border-radius: var(--radio);
+  outline: none;
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+  font: inherit;
+  font-size: 44px;
+  font-weight: 600;
+  caret-color: var(--rojo);
+}
+
+.campo__input::placeholder {
+  color: var(--azul-oscuro);
+  opacity: 0.35;
+  font-weight: 400;
+}
+
+.campo--activo .campo__input {
+  border-color: var(--dorado);
+}
+
+.campo--error .campo__input {
+  border-color: var(--error);
+}
+
+/* Altura reservada para que la pantalla no salte cuando aparece un error. */
+.campo__error {
+  min-height: 40px;
+  font-size: 30px;
+  line-height: 40px;
+  font-weight: 500;
+  color: var(--error);
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  min-height: var(--boton-alto);
+  font-size: 38px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.casilla__caja {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border: 5px solid var(--blanco);
+  border-radius: 16px;
+}
+
+.casilla[aria-checked='true'] .casilla__caja {
+  border-color: var(--dorado);
+  background: var(--dorado);
+}
+
+.casilla__caja svg {
+  width: 52px;
+  height: 52px;
+  fill: none;
+  stroke: var(--azul-oscuro);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.casilla:active .casilla__caja {
+  transform: scale(0.92);
+}
+
+/* Modal */
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.modal__tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-height: 100%;
+  padding: 64px;
+  border-radius: 40px;
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+}
+
+.modal__titulo {
+  font-size: 56px;
+  font-weight: 800;
+}
+
+.modal__cuerpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  font-size: 32px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* Teclado en pantalla */
+.teclado-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.teclado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 24px 32px;
+  border-radius: 40px 40px 0 0;
+  background: var(--azul-oscuro);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.teclado__fila {
+  display: flex;
+  gap: 12px;
+}
+
+.teclado--numerico .teclado__fila {
+  width: 720px;
+  margin: 0 auto;
+}
+
+.tecla {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  border-radius: 18px;
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+  font-size: 42px;
+  font-weight: 600;
+  transition: transform 60ms ease-out;
+}
+
+.tecla svg {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tecla--atajo {
+  font-size: 30px;
+}
+
+.tecla--especial {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--blanco);
+}
+
+.tecla--accion {
+  background: var(--rojo);
+  color: var(--blanco);
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.tecla--activa {
+  background: var(--dorado);
+  color: var(--azul-oscuro);
+}
+
+/* Retroalimentación al tocar (estado propio, ver Teclado.tsx). */
+.tecla--presionada {
+  transform: scale(0.92);
+  background: var(--dorado);
+  color: var(--azul-oscuro);
+}
