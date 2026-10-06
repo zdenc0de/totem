@@ -7,6 +7,7 @@ export type Registro = {
   totemId: TotemId
   createdAt: string
   nombre: string
+  apellido: string
   email: string
   telefono: string
   aceptoPrivacidad: true
