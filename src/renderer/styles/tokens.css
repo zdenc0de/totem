@@ -9,6 +9,15 @@
   --texto-suave: rgba(255, 255, 255, 0.8);
   --error: #ffb4b4;
 
+  /* Paleta de Eliot (assets/inspiration/Elliot_identidad_colores.jpeg). Solo la usa IDLE. */
+  /* POR CONFIRMAR: el manual da #FFED00 pero también RGB 241, 237, 0 (= #F1ED00). Se usa el hex. */
+  --amarillo-x: #ffed00;
+  --amarillo-2: #dcdc07;
+  --amarillo-4: #f2f06a;
+  --amarillo-6: #f9f7b5;
+  --negro-80: #58595b;
+  --negro-20: #d1d3d4;
+
   /* Century Gothic solo si el cliente entrega los archivos con licencia; mientras, Poppins local. */
   --fuente: 'Poppins', 'Segoe UI', sans-serif;
 

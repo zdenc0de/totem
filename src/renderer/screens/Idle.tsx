@@ -1,36 +1,32 @@
-import { motion } from 'framer-motion'
+import { Mosaico } from '../components/Mosaico'
+import logoConaip from '../../../assets/logos/conaip.svg'
+import logoEliot from '../../../assets/logos/elliot_svg.svg'
 import type { ScreenProps } from './types'
 
-// PROVISIONAL (Fase 3: atractor animado con identidad visual).
+// Atractor: toda la pantalla es el botón. Lo único que se mueve es el mosaico.
 export function Idle({ dispatch }: ScreenProps): React.JSX.Element {
   return (
     <div
-      className="pantalla"
+      className="pantalla idle"
       onPointerDown={() => dispatch({ type: 'INICIAR', ahoraMs: Date.now() })}
-      style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: 64 }}
     >
-      <p style={{ fontSize: 40, fontWeight: 600, color: 'var(--texto-suave)' }}>
-        CONAIP × Eliot Awards
-      </p>
-      <h1 style={{ fontSize: 112, fontWeight: 800, lineHeight: 1.05 }}>
+      <Mosaico />
+      <div className="idle__logos">
+        <img className="idle__logo-conaip" src={logoConaip} alt="CONAIP" />
+        <span className="idle__logos-division" />
+        <img className="idle__logo-eliot" src={logoEliot} alt="Eliot Awards" />
+      </div>
+      <h1 className="idle__titulo">
         Descubre tu
         <br />
-        tipo de talento
+        talento y
+        <br />
+        acepta el reto
       </h1>
-      <motion.p
-        animate={{ opacity: [1, 0.35, 1], scale: [1, 1.04, 1] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          marginTop: 120,
-          fontSize: 52,
-          fontWeight: 700,
-          padding: '32px 72px',
-          borderRadius: 999,
-          background: 'var(--rojo)'
-        }}
-      >
-        Toca para comenzar
-      </motion.p>
+      <p className="idle__bajada">
+        5 preguntas deciden tu reto: simulador de carreras o pera de box.
+      </p>
+      <p className="idle__accion">Toca para comenzar</p>
     </div>
   )
 }

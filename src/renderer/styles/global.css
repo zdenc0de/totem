@@ -310,3 +310,138 @@ p {
   background: var(--dorado);
   color: var(--azul-oscuro);
 }
+
+/* IDLE */
+.idle {
+  justify-content: flex-end;
+  background: var(--azul);
+  color: var(--blanco);
+}
+
+/* Franja de logos, como la cabecera del boleto CONAIP × Eliot. Mismo alto que BANDA en Mosaico.tsx. */
+.idle__logos {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  height: 200px;
+  background: var(--blanco);
+}
+
+.idle__logo-conaip {
+  height: 96px;
+}
+
+.idle__logos-division {
+  width: 3px;
+  height: 112px;
+  background: var(--negro-20);
+}
+
+.idle__logo-eliot {
+  height: 124px;
+}
+
+.idle__titulo {
+  position: relative;
+  font-size: 124px;
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.idle__bajada {
+  position: relative;
+  max-width: 860px;
+  margin-top: 32px;
+  font-size: 42px;
+  line-height: 1.3;
+}
+
+.idle__accion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  margin-top: 64px;
+  border-radius: var(--radio);
+  background: var(--amarillo-x);
+  color: var(--negro);
+  font-size: 60px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* Mosaico (components/Mosaico.tsx): cuadros en px del artboard.
+   --retraso: ms para aparecer en la entrada; --d: distancia al centro del rombo (0 a ~1.5). */
+.mosaico {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mosaico__cuadro {
+  position: absolute;
+  animation: mosaico-entrada 1ms calc(var(--retraso) * 1ms) both;
+}
+
+/* Onda que sale del centro: la trama se encoge y vuelve, como si respirara. */
+.mosaico__cuadro--trama {
+  animation:
+    mosaico-entrada 1ms calc(var(--retraso) * 1ms) both,
+    mosaico-latido 4s ease-in-out calc(900ms + var(--d) * 2s) infinite;
+}
+
+/* Algunos píxeles sueltos parpadean, cada uno a su ritmo. */
+.mosaico__cuadro--brillo {
+  animation:
+    mosaico-entrada 1ms calc(var(--retraso) * 1ms) both,
+    mosaico-brillo calc(2.5s + var(--d) * 3s) steps(1) calc(1600ms + var(--retraso) * 3ms) infinite;
+}
+
+.mosaico__cuadro--borde {
+  animation: none;
+}
+
+@keyframes mosaico-entrada {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mosaico-latido {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.5);
+  }
+}
+
+@keyframes mosaico-brillo {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0;
+  }
+  85% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaico__cuadro {
+    animation: none !important;
+  }
+}
