@@ -166,3 +166,155 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 - Texto del aviso de privacidad: pendiente del cliente; después vendrá de `content.json`.
 - El AGENTS.md (§9 y §10) aún describe solo `nombre`. La exportación de la Fase 4 debe incluir la columna Apellido.
 - Aún no existe el temporizador de inactividad (Fase 1). Por ahora, el estado del formulario es local y se borra al salir de la pantalla.
+
+---
+
+## 2026-10-08 — Paleta de Eliot y rediseño de IDLE
+
+**Fase:** 3 — Interfaz final (adelanto: IDLE e identidad de color)
+
+### Paleta (`styles/tokens.css`)
+- Se reemplazan por completo los colores anteriores (rojo, azul y dorado) por los del manual de identidad de Eliot (`assets/inspiration/Elliot_identidad_colores.jpeg`):
+  - Primarios: Yellow X `#FFED00` y negro `#000000`.
+  - Secundarios: blanco, Yellow 1–3 y Black 80 / 40.
+  - Terciarios: Yellow 4–6 y Black 60 / 20 / 10.
+- Tokens de uso: `--fondo` (Yellow X), `--tinta` (negro), `--texto-suave` (Black 80) y `--texto-suave-negro` (Black 20, para texto sobre negro).
+- Se elimina `--error`. Como la paleta no tiene rojo, el error se muestra como una etiqueta negra con texto amarillo y el campo con error lleva borde punteado (el activo, sólido).
+
+### IDLE (`screens/Idle.tsx`, `components/Mosaico.tsx`)
+- Fondo Yellow X. El titular "Descubre tu tipo de talento" va en Poppins 900 de 150 px, alineado a la izquierda. Debajo, una línea que explica qué pasa ("Responde 5 preguntas y te diremos qué juego te toca.") y un bloque negro con "Toca para comenzar" (toda la pantalla sigue siendo el botón).
+- **Mosaico:** trama de cuadros negros con la forma de rombo redondeado del sello "Más cerca de ti". Los cuadros se encogen hacia la orilla y se deshacen en píxeles sueltos de la paleta (negros, grises y amarillos) hacia arriba a la derecha, como los mosaicos del manual.
+  - Se calcula una vez con semilla fija, así la composición es siempre la misma.
+  - Entrada: los cuadros aparecen del centro hacia afuera cada vez que se vuelve a IDLE.
+  - Después, una onda que sale del centro encoge y regresa los cuadros (escala de 1 a 0.5 en 4 s).
+  - Solo CSS con `transform` y `opacity` (§14). Unos 180 elementos y sin JS por cuadro. Respeta `prefers-reduced-motion`.
+- Es la única animación de la pantalla: el botón ya no pulsa.
+
+### Resto de pantallas (solo color, sin rediseño)
+- Botón principal negro con texto amarillo; secundario con borde negro; opciones del quiz en blanco.
+- Teclado: panel negro, teclas blancas, teclas especiales en Black 80 y "Siguiente"/"Listo", ⇧ activa y la tecla presionada en Yellow X.
+- Casilla: marcada en negro con palomita amarilla.
+- Quiz y Calculando: pista en Yellow 1 y avance en negro.
+- Boleto provisional: tarjeta negra con texto blanco.
+- Admin: fondo negro, texto blanco y "Salir de la app" en amarillo.
+
+**Archivos:**
+- Nuevos: `src/renderer/components/Mosaico.tsx`.
+- Modificados: `src/renderer/styles/tokens.css`, `src/renderer/styles/global.css`, `src/renderer/screens/{Idle,Quiz,Calculando,Boleto,Admin}.tsx`, `src/renderer/components/{Stage,DevNav}.tsx` y `src/renderer/main.tsx` (Poppins 900).
+
+### Verificación
+- 93 pruebas pasan; typecheck y lint limpios.
+- Capturas del build en Chromium a 1080×1920 (puppeteer-core desde una carpeta temporal, no se agregó al proyecto):
+  - IDLE a los 0.3 s (entrada) y a los 4 s (onda).
+  - Registro con teclado abierto y con errores.
+  - Quiz, Calculando, Boleto y Admin (abierto con los 5 toques en la esquina).
+- Sin errores de consola (solo el 404 de `favicon.ico` del servidor temporal).
+
+### Decisiones
+- Se usa el hex `#FFED00` del manual para Yellow X, aunque su RGB (241, 237, 0) da `#F1ED00`.
+- Para Black 10% se usa el RGB (230, 231, 232 = `#E6E7E8`), porque el hex del manual (`#363738`) no le corresponde.
+- Se mantiene Poppins (§14) hasta que llegue Century Gothic.
+
+### Pendientes detectados
+- Confirmar con el cliente el valor correcto de Yellow X.
+- El AGENTS.md (§7 y §14) todavía describe la paleta CONAIP (rojo, azul, dorado) y el boleto azul con franjas rojas. Hay que actualizarlo o confirmar qué identidad manda en el boleto.
+- Logos de CONAIP y Eliot en alta para reemplazar el texto "CONAIP × Eliot Awards" en IDLE.
+
+---
+
+## 2026-10-08 — IDLE con las dos identidades (CONAIP × Eliot)
+
+**Fase:** 3 — Interfaz final (IDLE)
+
+### Referencias
+- `assets/inspiration/MANUAL DE IDENTIDAD.pdf` (CONAIP): rojo `#AC141C`, azul `#0C53A2`, isotipo (círculo cortado por una paloma), Century Gothic para el logotipo y Poppins para materiales audiovisuales.
+- `assets/inspiration/Conaip_x_Elliot.jpeg`: boleto co-marca del cliente. Lleva franja blanca con los dos logos, fondo azul, cortes rojos en diagonal y acentos amarillos.
+
+### Logos (`assets/logos/`)
+- Los dos logos viven en `assets/logos/`. `Idle.tsx` los importa de ahí, así que hay una sola copia de cada uno y Vite los empaqueta como archivos locales.
+- `conaip.svg`: vector extraído de la página "Logotipo" del manual (`pdftocairo -svg`). Incluye isotipo, nombre, leyenda "Colegio Nacional de Integración Profesional" y su línea roja; se omitió la línea "Instancia Evaluadora…", ilegible a ese tamaño y ausente en el boleto del cliente. Los colores se ajustaron a los hex del manual (el vector traía la conversión CMYK, `#2958B0`).
+- `elliot_svg.svg`: logo de Eliot Awards en vector, entregado por el cliente (negro `#1D1D1B`). Sin scripts ni recursos externos.
+
+### Paleta (`styles/tokens.css`)
+- Regresan `--rojo` y `--azul` de CONAIP junto a la paleta de Eliot.
+
+### IDLE (`screens/Idle.tsx`, `components/Mosaico.tsx`)
+- Composición:
+  - Fondo azul CONAIP con franja blanca de logos arriba, como la cabecera del boleto. La franja se deshace en píxeles hacia el azul.
+  - Titular del propio cliente: "Descubre tu talento y acepta el reto", en Poppins 900 blanca.
+  - Bajada que nombra los dos juegos: "5 preguntas deciden tu reto: simulador de carreras o pera de box."
+  - Botón de bloque amarillo con texto negro.
+- El mosaico ahora es una escena completa en px del artboard, sobre una retícula de 44 px:
+  - Rombo de trama amarilla (Eliot), que sigue latiendo en una onda desde el centro.
+  - Paloma roja de píxeles al centro del rombo (guiño al isotipo de CONAIP y al "acierto" del quiz). No es el isotipo: el logo real va en la franja.
+  - Dos franjas rojas en diagonal hechas de píxeles, como los cortes del boleto.
+  - Píxeles sueltos en amarillos, blancos y negros; algunos parpadean (`steps`). El rojo se reserva para la paloma y las franjas, para que la paloma se lea.
+- Entrada, cada vez que se vuelve a IDLE: el rombo se arma del centro hacia afuera (0–0.7 s), la paloma se dibuja de punta a punta (0.8–1.3 s) y las franjas suben (1.2–1.75 s). Después quedan la onda y los parpadeos.
+- Sigue siendo solo CSS con `transform` y `opacity`, y respeta `prefers-reduced-motion`.
+
+**Archivos:**
+- Nuevos: `assets/logos/conaip.svg` (el de Eliot, `assets/logos/elliot_svg.svg`, lo agregó el cliente).
+- Modificados: `src/renderer/components/Mosaico.tsx`, `src/renderer/screens/Idle.tsx`, `src/renderer/styles/global.css` y `src/renderer/styles/tokens.css`.
+
+### Verificación
+- 93 pruebas pasan; typecheck y lint limpios.
+- Capturas del build en Chromium a 1080×1920: a los 0.4, 1, 1.5 y 6 s.
+- Los logos se empaquetan como archivos locales (`out/renderer/assets/`), dentro de la CSP.
+
+### Pendientes detectados
+- El resto de las pantallas sigue en amarillo y negro; falta decidir si adoptan el mismo sistema que IDLE.
+- El mockup del cliente usa otros nombres de talento: El Impulsor (fuerza, pera de box), El Acelerador (velocidad, simulador) y El Reflejo (reflejos, simulador). El AGENTS.md dice Acelerador, Impacto y Versátil. Hay que confirmar con el cliente antes de hacer el boleto.
+
+---
+
+## 2026-10-08 — El resto del quiz regresa a los colores de CONAIP
+
+**Fase:** 3 — Interfaz final
+
+- A petición del cliente, solo IDLE usa la combinación CONAIP × Eliot. Registro, teclado, modal, Quiz, Calculando, Boleto, Admin y DevNav regresan exactamente a como estaban (azul, rojo y dorado de CONAIP). Esto deshace el cambio de paleta de la entrada "Paleta de Eliot y rediseño de IDLE".
+- `tokens.css`: vuelven los tokens originales (`--rojo`, `--azul`, `--azul-oscuro`, `--dorado`, `--texto-suave`, `--error`). De Eliot solo quedan los que usa IDLE: `--amarillo-x`, `--amarillo-2`, `--amarillo-4`, `--amarillo-6`, `--negro-80` y `--negro-20`.
+- `global.css`: vuelve a la versión anterior, más la sección `/* IDLE */` (pantalla y mosaico).
+- **Archivos restaurados desde git:** `components/{DevNav,Stage}.tsx`, `screens/{Quiz,Calculando,Boleto,Admin}.tsx`, `styles/global.css` (más la sección de IDLE) y `styles/tokens.css` (más los tokens de Eliot).
+- **Verificación:** 93 pruebas pasan; typecheck y lint limpios. Se capturó el build con IDLE, Registro con teclado y error, Quiz, Boleto y Admin.
+- **Pendientes:** se cierra el de "el resto de las pantallas sigue en amarillo y negro". El AGENTS.md (§14) vuelve a coincidir con la paleta del resto de las pantallas; solo IDLE agrega la de Eliot.
+
+---
+
+## 2026-10-08 — Abrir la app directo en una pantalla (solo desarrollo)
+
+**Fase:** 3 — Interfaz final (herramienta para trabajar el boleto)
+
+- `TOTEM_PANTALLA=boleto npm run dev` abre la app directo en esa pantalla, sin recorrer el flujo. Sirve para cualquier pantalla del flujo (`idle`, `registro`, `quiz`, `calculando`, `boleto`, `admin`).
+- `main/index.ts`: en desarrollo pasa `TOTEM_PANTALLA` y `TOTEM_NOMBRE` como `?pantalla=…&nombre=…` en la URL del servidor de Vite. En producción no cambia nada.
+- `renderer/state/dev.ts` (nuevo): `estadoInicialDev` arma el estado inicial con datos de ejemplo:
+  - Registro: nombre "Zdenko" o el de `TOTEM_NOMBRE`.
+  - Respuestas: `V V V A I`, que dan Versátil → simulador.
+  - `App.tsx` solo lo usa si `import.meta.env.DEV`, así que no llega al build de producción.
+- `Ctrl+R` recarga en la misma pantalla porque la URL conserva los parámetros. "Terminar" sigue regresando a IDLE.
+- README: cómo usarlo y cómo abrir una segunda ventana si ya hay otra de desarrollo (`--user-data-dir`, por el bloqueo de instancia única).
+
+**Archivos:**
+- Nuevo: `src/renderer/state/dev.ts`.
+- Modificados: `src/main/index.ts`, `src/renderer/App.tsx` y `README.md`.
+
+### Verificación
+- 93 pruebas pasan; typecheck y lint limpios.
+- `http://localhost:5173/?pantalla=boleto` muestra el boleto con "Zdenko" y `V V V A I`.
+- Se abrió una segunda ventana de Electron conectada al servidor de Vite que ya estaba corriendo.
+
+### Notas
+- Un segundo `electron-vite dev` falló con `EMFILE` (se agotó el límite de inotify del sistema). Por eso la segunda ventana se conectó al servidor existente: `ELECTRON_RENDERER_URL=http://localhost:5173 TOTEM_PANTALLA=boleto electron . --user-data-dir=…`, después de compilar.
+
+---
+
+## 2026-10-08 — El resto del quiz regresa a los colores de CONAIP
+
+**Fase:** 3 — Interfaz final
+
+- A pedido del cliente, solo IDLE usa la combinación CONAIP × Eliot. Registro, Quiz, Calculando, Boleto, Admin, Stage y DevNav regresan exactamente a como estaban en el último commit (azul, rojo, dorado y blanco).
+- `global.css`: se restauraron los estilos originales; solo se conserva la sección IDLE (franja de logos, titular, botón y mosaico).
+- `tokens.css`: regresan los tokens originales (`--azul-oscuro`, `--dorado`, `--texto-suave` y `--error`). De la paleta de Eliot quedan solo los tonos que usa el mosaico: `--amarillo-x`, `--amarillo-2`, `--amarillo-4`, `--amarillo-6`, `--negro-80` y `--negro-20`.
+- Se resuelve el pendiente "el resto de las pantallas sigue en amarillo y negro" de la entrada anterior.
+- Verificación:
+  - 93 pruebas pasan; typecheck y lint limpios.
+  - Capturas del build: IDLE, Registro con teclado y error, y Quiz, sin errores de consola.
