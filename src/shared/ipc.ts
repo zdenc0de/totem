@@ -12,6 +12,7 @@ export const IPC = {
   adminEstado: 'admin:estado',
   adminCambiarPin: 'admin:cambiarPin',
   adminSetTotemId: 'admin:setTotemId',
+  adminExportar: 'admin:exportar',
   adminSalir: 'admin:salir'
 } as const
 
@@ -25,6 +26,9 @@ export type DatosGuardar = {
 
 /** `resultado` es el que calculó main; `null` si rechazó los datos (el renderer calcula el suyo). */
 export type RespuestaGuardar = { guardado: boolean; resultado: Resultado | null }
+
+export type ResultadoExportar =
+  { ok: true; total: number; archivos: string[] } | { ok: false; motivo: 'cancelado' | 'error' }
 
 export type EstadoAdmin = {
   total: number

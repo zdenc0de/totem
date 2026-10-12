@@ -5,7 +5,8 @@ import {
   type DatosGuardar,
   type Duplicados,
   type EstadoAdmin,
-  type RespuestaGuardar
+  type RespuestaGuardar,
+  type ResultadoExportar
 } from '@shared/ipc'
 import type { ConfigRenderer } from '@shared/content'
 import type { TotemId } from '@shared/types'
@@ -22,6 +23,7 @@ const api = {
     estado: (): Promise<EstadoAdmin> => ipcRenderer.invoke(IPC.adminEstado),
     cambiarPin: (pin: string): Promise<boolean> => ipcRenderer.invoke(IPC.adminCambiarPin, pin),
     setTotemId: (id: TotemId): Promise<boolean> => ipcRenderer.invoke(IPC.adminSetTotemId, id),
+    exportar: (): Promise<ResultadoExportar> => ipcRenderer.invoke(IPC.adminExportar),
     salir: (): Promise<void> => ipcRenderer.invoke(IPC.adminSalir)
   }
 }

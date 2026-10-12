@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, powerSaveBlocker, session } from 'electron'
+import { app, BrowserWindow, dialog, Menu, powerSaveBlocker, session } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { log } from './log'
@@ -71,11 +71,31 @@ async function iniciar(): Promise<void> {
     settings: crearSettings(dirData, log),
     contenido: cargado.contenido,
     qr: await generarQrs(cargado, log),
+    elegirCarpeta,
     salir
   })
   bloquearAdmin = ipc.bloquearAdmin
 
+  // Arranque automático al iniciar sesión en Windows (§13). Solo en la app instalada.
+  if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true })
+
   crearVentana()
+}
+
+/**
+ * Diálogo para elegir la USB. Se abre como hijo de la ventana kiosco para que quede encima.
+ * Solo en desarrollo, TOTEM_EXPORT_DIR lo sustituye (pruebas automáticas).
+ */
+async function elegirCarpeta(): Promise<string | null> {
+  const fija = process.env['TOTEM_EXPORT_DIR']
+  if (esDev && fija) return fija
+  if (!ventana) return null
+  const r = await dialog.showOpenDialog(ventana, {
+    title: 'Elige la USB donde guardar los registros',
+    buttonLabel: 'Exportar aquí',
+    properties: ['openDirectory', 'createDirectory']
+  })
+  return r.canceled ? null : (r.filePaths[0] ?? null)
 }
 
 /** content.json empaquetado como extraResources; en desarrollo, el de resources/. */

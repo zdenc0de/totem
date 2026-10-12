@@ -2,7 +2,7 @@
 // después de verificar el PIN.
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { IPC, type EstadoAdmin, type RespuestaGuardar } from '@shared/ipc'
+import { IPC, type EstadoAdmin, type RespuestaGuardar, type ResultadoExportar } from '@shared/ipc'
 import type { ConfigRenderer, Contenido } from '@shared/content'
 import type { Juego } from '@shared/types'
 import { normalizarEmail } from '@shared/validation'
@@ -11,12 +11,15 @@ import { armarRegistro } from './registro'
 import { esPinValido, hashPin, verificarPin } from './pin'
 import type { Storage } from './storage'
 import type { SettingsStore } from './settings'
+import { escribirExport, nombreExport, tablaExport } from './export'
 
 export type Dependencias = {
   storage: Storage
   settings: SettingsStore
   contenido: Contenido
   qr: Record<Juego, string | null>
+  /** Diálogo para elegir la carpeta de exportación (la USB); `null` si se cancela. */
+  elegirCarpeta: () => Promise<string | null>
   salir: () => void
 }
 
@@ -24,9 +27,10 @@ export type Dependencias = {
 const MAX_FALLOS = 5
 const ESPERA_MS = 30_000
 
-export function registrarIpc({ storage, settings, contenido, qr, salir }: Dependencias): {
+export function registrarIpc(deps: Dependencias): {
   bloquearAdmin: () => void
 } {
+  const { storage, settings, contenido, qr, elegirCarpeta, salir } = deps
   let desbloqueado = false
   let fallos = 0
   let esperarHasta = 0
@@ -138,6 +142,24 @@ export function registrarIpc({ storage, settings, contenido, qr, salir }: Depend
       settings.guardar({ totemId: id, idConfirmado: true })
       log.info('ID de tótem configurado', { totemId: id })
       return true
+    })
+  )
+
+  ipcMain.handle(
+    IPC.adminExportar,
+    soloAdmin(IPC.adminExportar, async (): Promise<ResultadoExportar> => {
+      const carpeta = await elegirCarpeta()
+      if (!carpeta) return { ok: false, motivo: 'cancelado' }
+      const registros = storage.leerTodos()
+      try {
+        const nombre = nombreExport(settings.leer().totemId, new Date())
+        const archivos = await escribirExport(carpeta, nombre, tablaExport(registros, contenido))
+        log.info('Exportación terminada', { total: registros.length, archivos })
+        return { ok: true, total: registros.length, archivos }
+      } catch (err) {
+        log.error('Exportación fallida', String(err))
+        return { ok: false, motivo: 'error' }
+      }
     })
   )
 
