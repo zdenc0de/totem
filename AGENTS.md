@@ -33,8 +33,9 @@ IDLE (atractor animado, "Toca para comenzar")
   → BOLETO (personalizado + QR) — botón "Terminar"
   → IDLE
 ```
-- **Inactividad:** a los 45 s sin toques en cualquier pantalla que no sea IDLE, se muestra el modal "¿Sigues ahí?" con una cuenta regresiva de 15 s; si nadie responde, se borra todo y se vuelve a IDLE. Valores en config.
-- **BOLETO:** regresa solo a IDLE a los 60 s (configurable) o al tocar "Terminar".
+- **Inactividad:** en REGISTRO y QUIZ, a los 45 s sin toques se muestra el modal "¿Sigues ahí?" con una cuenta regresiva de 15 s; si nadie responde, se borra todo y se vuelve a IDLE. Valores en config.
+- **BOLETO:** no usa el modal; regresa solo a IDLE a los 60 s (configurable) o al tocar "Terminar". El botón "Terminar" muestra la cuenta regresiva.
+- **ADMIN:** se cierra directo a IDLE a los 45 s sin toques, sin modal.
 - Al volver a IDLE se limpia **todo** el estado: no puede quedar ningún dato del participante anterior.
 - El registro se guarda **solo al completar el quiz**. Los abandonos no se guardan.
 
@@ -89,9 +90,9 @@ Agregar una prueba que recorra las 243 combinaciones y verifique: siempre hay re
 ## 7. Boleto (pantalla de resultado)
 Referencia visual: boleto vertical con forma de ticket (muescas laterales), franja superior blanca con los logos de CONAIP y Eliot Awards, fondo azul con franjas diagonales rojas, borde dorado.
 Contenido:
-- `"{PrimerNombre}, tu tipo de talento es"`
-- Nombre del talento en grande: **Talento Acelerador / Talento de Impacto / Talento Versátil**
-- Frase descriptiva del talento (PENDIENTE — usar placeholders desde config)
+- `"{PrimerNombre},"` en su propia línea y debajo `"TU TIPO DE TALENTO ES"` (mayúsculas espaciadas, como el mockup del cliente)
+- Nombre del talento en grande (Poppins 900): **Talento Acelerador / Talento de Impacto / Talento Versátil**
+- Frase descriptiva del talento, desde config. Mientras el cliente confirma, se usan las frases de su mockup (`assets/inspiration/Conaip_x_Elliot.jpeg`).
 - QR del juego asignado, sobre una tarjeta blanca
 - Banda inferior: **"ESCANEA | para descubrir tu juego"**
 - El nombre del juego **no** se muestra en pantalla por defecto; se descubre con el QR. Dejarlo como opción en config: `showGameOnTicket: false`.
@@ -107,7 +108,7 @@ Contenido:
 **Ubicación:** `app.getPath('userData')/data/`
 - `registros.jsonl` — un registro JSON por línea. Se escribe con open → write → `fsync` → close.
 - `backup/registros_backup.jsonl` — copia espejo escrita en el mismo momento.
-- `settings.json` — ID de tótem (`T1`/`T2`) y PIN si se cambió.
+- `settings.json` — ID de tótem (`T1`/`T2`), si el ID ya se confirmó desde el panel (`idConfirmado`) y el hash del PIN si se cambió (scrypt de `node:crypto`, nunca el PIN en claro). Se escribe con archivo temporal + `fsync` + `rename`.
 
 **Registro:**
 ```ts
@@ -116,6 +117,7 @@ type Registro = {
   totemId: 'T1' | 'T2';
   createdAt: string;     // ISO con zona horaria local
   nombre: string;
+  apellido: string;
   email: string;         // normalizado: trim + lowercase
   telefono: string;      // 10 dígitos
   aceptoPrivacidad: true;
@@ -129,13 +131,19 @@ type Registro = {
 };
 ```
 
-**Duplicados:** NO se permiten correos repetidos en el mismo tótem. Al arrancar, se carga en memoria un `Set` con los correos guardados. En REGISTRO, al tocar "Continuar", si el correo ya existe se muestra: *"Este correo ya participó. Regístrate con otro correo."* No se puede verificar contra el otro tótem (no hay red); la exportación incluye una columna para detectar duplicados al unir archivos.
-- La validación se hace en el proceso principal vía IPC (`registro:existeEmail`) y se vuelve a verificar al guardar.
+**Duplicados:** NO se permiten correos ni teléfonos repetidos en el mismo tótem. Al arrancar, se cargan en memoria un `Set` con los correos y otro con los teléfonos guardados. En REGISTRO, al tocar "Continuar", se muestra debajo del campo que corresponda:
+- *"Este correo ya participó. Regístrate con otro correo."*
+- *"Este teléfono ya participó. Regístrate con otro número."*
 
-**Comunicación renderer ↔ main:** solo vía `preload` con `contextBridge`. API mínima: `existeEmail`, `guardarRegistro`, `getConfig`, `admin.*`.
+No se puede verificar contra el otro tótem (no hay red); la exportación incluye la columna del tótem para detectar duplicados al unir archivos.
+- La validación se hace en el proceso principal vía IPC (`registro:existeDuplicado`) y se vuelve a verificar al guardar.
+- El registro se guarda al responder la pregunta 5. Si el disco falla, el participante ve su boleto de todos modos: basta con que se escriba el archivo principal o el backup; si fallan ambos, se reintenta una vez y se registra en el log (sin datos personales).
+- El proceso principal no confía en el renderer: vuelve a validar los datos y recalcula el resultado antes de guardar.
+
+**Comunicación renderer ↔ main:** solo vía `preload` con `contextBridge`. API mínima: `existeDuplicado`, `guardarRegistro`, `getConfig`, `admin.*`. Los `admin.*` (salvo verificar el PIN) solo responden después de verificar el PIN.
 
 ## 10. Registro: validaciones
-- **Nombre:** obligatorio, de 2 a 60 caracteres, letras, espacios, acentos, ñ, apóstrofe y guion.
+- **Nombre(s) y Apellido:** obligatorios, de 2 a 60 caracteres, letras, espacios, acentos, ñ, apóstrofe y guion. Un solo campo de Apellido (ahí van los dos).
 - **Correo:** obligatorio, regex razonable, máximo 80 caracteres, normalizado a minúsculas.
 - **Teléfono:** obligatorio, exactamente 10 dígitos (México); solo teclado numérico.
 - **Aviso de privacidad:** casilla obligatoria + enlace "Ver aviso de privacidad" que abre un modal con scroll. El texto viene de config (PENDIENTE del cliente).
@@ -147,23 +155,24 @@ type Registro = {
 - Teclas grandes (mínimo 80 px), retroalimentación visual al tocar, borrar y espacio.
 
 ## 11. Panel de administrador
-- **Acceso:** 5 toques en la esquina superior izquierda en menos de 3 s, en IDLE → PIN numérico (default en config, cambiable desde el panel).
+- **Acceso:** 5 toques en la esquina superior izquierda en menos de 3 s, en IDLE → PIN numérico (default en config, cambiable desde el panel). Mientras siga el PIN de fábrica, el panel lo avisa.
 - Funciones:
   - Estadísticas: total de registros, por talento y por juego.
-  - **Exportar a Excel (.xlsx)** con diálogo para elegir la USB. Nombre: `registros_{T1}_{YYYY-MM-DD_HHmm}.xlsx`. Columnas: todos los campos del registro, con las respuestas en columnas Q1..Q5, y los nombres legibles de talento y juego.
-  - Exportar también a CSV (UTF-8 con BOM, para que Excel muestre bien los acentos).
-  - Configurar el ID del tótem (T1/T2).
+  - **Exportar a USB:** un solo botón abre el diálogo para elegir la carpeta y escribe el `.xlsx` y el `.csv` con el mismo nombre base: `registros_{T1}_{YYYY-MM-DD_HHmm}`. Columnas: todos los campos del registro (incluido Apellido), con las respuestas en columnas Q1..Q5, y los nombres legibles de talento y juego.
+  - El CSV va en UTF-8 con BOM, para que Excel muestre bien los acentos, y las celdas que empiezan con `= + - @` llevan `'` al inicio para que Excel no las tome como fórmulas.
+  - Configurar el ID del tótem (T1/T2). Arranca como T1 y el panel muestra "ID sin confirmar" hasta que alguien lo elija.
+  - Avisos de QR pendiente (sin URL ni imagen en config).
   - Volver al quiz / Salir de la app.
 - El panel también se cierra solo por inactividad.
 
 ## 12. Configuración externa (`resources/content.json`)
-Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar textos sin recompilar. Validarlo con un esquema (zod); si es inválido, usar los valores por defecto y registrar el error en el log.
+Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar textos sin recompilar. Orden de lectura: `userData/content.json` (para cambiar textos o URLs el día del evento sin reinstalar) → `resources/content.json` → valores por defecto. Cada archivo se valida con un esquema (zod); si es inválido, se pasa al siguiente y se registra el error en el log.
 ```json
 {
   "talentos": {
-    "A": { "nombre": "Talento Acelerador", "frase": "PENDIENTE" },
-    "I": { "nombre": "Talento de Impacto", "frase": "PENDIENTE" },
-    "V": { "nombre": "Talento Versátil",  "frase": "PENDIENTE" }
+    "A": { "nombre": "Talento Acelerador", "frase": "Decides rápido y conviertes las ideas en acción." },
+    "I": { "nombre": "Talento de Impacto", "frase": "Tu constancia mueve los proyectos que otros sueltan." },
+    "V": { "nombre": "Talento Versátil",  "frase": "Lees el momento y respondes antes que nadie." }
   },
   "juegos": {
     "simulador": { "nombre": "Simulador de carreras", "qrUrl": "PENDIENTE", "qrImage": null },
@@ -176,8 +185,8 @@ Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar text
   },
   "tiempos": { "inactividadSeg": 45, "avisoInactividadSeg": 15, "boletoSeg": 60 },
   "showGameOnTicket": false,
-  "privacidad": { "version": "v1", "texto": "PENDIENTE" },
-  "adminPinDefault": "PENDIENTE"
+  "privacidad": { "version": "v1", "texto": "(aviso de CONAIP, ver src/shared/privacidad.ts)" },
+  "adminPinDefault": "1234"
 }
 ```
 
@@ -247,13 +256,14 @@ resources/
 - Es imposible salir de la app sin el PIN (probar Alt+Tab, Alt+F4, gestos de borde y toques múltiples).
 
 ## 18. Pendientes del cliente (usar placeholders mientras llegan)
-- Frases descriptivas de los 3 talentos
+- Confirmar las frases de los 3 talentos (por ahora, las del mockup). El mockup usa otros nombres (El Acelerador, El Impulsor, El Reflejo); se mantienen los de este documento.
+- El mockup dice que "El Reflejo" (V) va siempre al simulador; la lógica del §6 lo reparte entre simulador y pera. Confirmar.
 - URLs (o PNGs de QR) de las fotos de los 2 juegos, y quién aloja las fotos
-- Texto del aviso de privacidad
+- Aviso de privacidad: menciona app móvil, CURP, fotografías y cámara, que el tótem no usa; falta la fecha de "Última actualización"
 - Logos en alta, fondos y diseños finales
 - Archivos y licencia de Century Gothic; aclarar el RGB del rojo
-- Confirmar: empate de votos versátiles → pera; ¿se elimina la pregunta bonus de CONAIP?; ¿duplicados también por teléfono?
-- PIN de administrador
+- Confirmar: empate de votos versátiles → pera; ¿se elimina la pregunta bonus de CONAIP?
+- PIN de administrador (por ahora `1234`)
 
 ## 19. Despliegue en Windows (checklist, fuera del código)
 Pausar Windows Update, desactivar notificaciones (Asistente de concentración), suspensión y apagado de pantalla en "Nunca", desactivar gestos de borde (`HKLM\SOFTWARE\Policies\Microsoft\Windows\EdgeUI\AllowEdgeSwipe = 0`), desactivar la aparición automática del teclado táctil, inicio de sesión automático, escalado de pantalla al 100% y ocultar la barra de tareas. Configurar un tótem como T1 y el otro como T2 desde el panel admin.
