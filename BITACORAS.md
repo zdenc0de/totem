@@ -82,6 +82,90 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 
 ---
 
+## 2026-10-11 — Fase 1: resultado, datos, IPC, duplicados e inactividad
+
+**Fase:** 1 — Lógica (fecha planeada: 6–7 oct)
+
+### Preparación
+- Se commitearon el aviso de privacidad y las notas de commits del AGENTS.md.
+- AGENTS.md se actualizó con las decisiones de la planeación: apellido, duplicados por teléfono, `userData/content.json`, inactividad por pantalla, nombre en el boleto, PIN `1234`, exportación con un botón y aviso de ID sin confirmar.
+- Se quitó la entrada duplicada "El resto del quiz regresa a los colores de CONAIP".
+- `state/dev.ts` no se había commiteado: se rehízo (`TOTEM_PANTALLA` / `TOTEM_NOMBRE`), y ahora DevNav también salta con datos de ejemplo.
+- Dependencias nuevas (devDependencies, empaquetadas por electron-vite): `zod`, `qrcode`, `exceljs` y `esbuild` (lo usa una prueba).
+
+### Compartido (`src/shared/`)
+- `result.ts`: `calcularResultado(respuestas, reglas)` (§6). Las reglas vienen de config. `esRespuestas` valida 5 respuestas A/I/V.
+- `content.ts`: esquema zod de `content.json`, `CONTENIDO_POR_DEFECTO` y `ConfigRenderer` (lo que recibe el renderer: sin el PIN y con los QR ya generados). El renderer solo importa tipos, así que zod no entra a su bundle.
+- `fecha.ts`: `isoLocal` (ISO con desfase local) y `selloArchivo` (`YYYY-MM-DD_HHmm`).
+- `nombre.ts`: `primerNombre` ("zDENKO" → "Zdenko", "ana-sofía" → "Ana-Sofía").
+- `quiz.ts`: `barajarOpciones` (Fisher–Yates, una vez por participante).
+- `validation.ts`: mensajes de correo y teléfono repetidos.
+- `ipc.ts`: canales y tipos de las respuestas.
+
+### Config (`resources/content.json`)
+- Generado desde `CONTENIDO_POR_DEFECTO`: nombres de AGENTS.md, frases del mockup como placeholder, aviso de CONAIP y PIN `1234`.
+- `electron-builder.yml`: `extraResources` lo copia junto al ejecutable.
+- Orden de lectura: `userData/content.json` → `resources/content.json` → valores por defecto. El que no es JSON o no pasa el esquema se salta y se registra en el log.
+
+### Proceso principal (`src/main/`)
+- `storage.ts`:
+  - `registros.jsonl` y `backup/registros_backup.jsonl` con open → write → fsync → close.
+  - Basta con que uno de los dos se escriba; si fallan ambos, un reintento.
+  - Al arrancar une ambos archivos por `id`, omite líneas dañadas y, si el archivo quedó sin salto de línea final (proceso muerto a media escritura), se lo agrega para que el siguiente registro no quede pegado.
+  - Sets de correos y teléfonos.
+- `settings.json` (`settings.ts`): `totemId`, `idConfirmado` y `pinHash`. Se escribe con temporal + fsync + rename.
+- `pin.ts`: hash scrypt con sal y comparación en tiempo constante. Sin hash, compara contra `adminPinDefault`.
+- `config.ts`: carga del contenido y QR generados localmente con `qrcode` (nivel Q, zona blanca de 4 módulos). `qrImage` tiene prioridad sobre `qrUrl`; sin ninguno válido, el QR queda pendiente.
+- `registro.ts`: arma el `Registro`. Main vuelve a validar y normalizar los datos y recalcula el resultado; ignora talento y juego que mande el renderer.
+- `ipc.ts`:
+  - `config:get`, `registro:existeDuplicado` y `registro:guardar` (revisa duplicados otra vez antes de escribir).
+  - `admin:*`: solo responden después de `admin:verificarPin`. Tras 5 PIN incorrectos seguidos, 30 s de espera. El panel se vuelve a bloquear al salir de él o al recargar la página.
+- `index.ts`: carga config, storage, settings e IPC antes de abrir la ventana. Si algo falla al iniciar, la ventana abre igual y muestra "Fuera de servicio".
+- En el log, las rutas van recortadas a carpeta/archivo (la de userData incluye el usuario de Windows).
+
+### Renderer
+- `App.tsx`: pide la config una vez y la comparte con `ContenidoContext`.
+- `state/flow.ts`: `INICIAR` recibe el orden barajado; `CALCULO_TERMINADO` recibe el resultado.
+- `state/useInactividad.ts`:
+  - REGISTRO y QUIZ: modal "¿Sigues ahí?" con cuenta regresiva y luego IDLE.
+  - ADMIN: se cierra directo.
+  - BOLETO e IDLE no se vigilan.
+- `Modal.tsx`: texto del botón configurable y capa por encima del teclado.
+- `Registro.tsx`: el aviso viene de la config. Al tocar "Continuar" se pregunta a main por duplicados y el error aparece debajo del campo; se quita solo al cambiar el dato.
+- `Calculando.tsx`: guarda el registro y espera lo que tarde más entre el guardado y 1.5 s. Si main no responde, calcula el resultado localmente y muestra el boleto igual.
+- `Admin.tsx`: al desmontarse le pide a main que bloquee el panel.
+
+**Archivos:**
+- Nuevos:
+  - `src/shared/{result,content,fecha,nombre}.ts` (+ pruebas) y `resources/content.json`.
+  - `src/main/{storage,settings,pin,config,registro,ipc}.ts`, `storage.fixture.ts` y las pruebas de main.
+  - `src/renderer/state/{contenido,dev,useInactividad}.ts` y `flow.test.ts`.
+- Modificados:
+  - `src/main/index.ts`, `src/preload/index.ts`, `src/shared/{ipc,quiz,validation}.ts` y `electron-builder.yml`.
+  - `src/renderer/App.tsx`, `components/{DevNav,Modal}.tsx`, `screens/{Idle,Registro,Calculando,Boleto,Admin}.tsx`, `state/flow.ts` y `styles/global.css`.
+
+### Pruebas
+- `result.test.ts`: los 9 casos obligatorios y las 243 combinaciones (81 simulador / 162 pera; A 51, I 51, V 141); también reglas distintas desde config.
+- `storage.test.ts`:
+  - Principal + backup, Sets al reabrir, línea truncada, registro que solo está en el backup y 300 registros seguidos.
+  - Un proceso hijo con el `storage.ts` real que se mata con SIGKILL a media escritura: todo lo recuperado está completo y en orden.
+- `config`, `pin`, `registro`, `content`, `fecha`, `nombre` y `flow` (REINICIAR, CERRAR_ADMIN y abandono no dejan datos; "Atrás"; toques fuera de pantalla).
+- Resultado: 161 pruebas pasan; typecheck y lint limpios.
+
+### Verificación manual (build real, manejado por CDP)
+- Flujo completo hasta el boleto, con el registro en ambos archivos.
+- Correo y teléfono repetidos bloqueados con sus mensajes.
+- "¿Sigues ahí?" y regreso a IDLE con los campos vacíos.
+- `admin.salir` y `admin.estado` rechazados sin PIN; la config no trae el PIN; QR generado.
+- Sin errores de consola.
+- Se usó un `userData/content.json` con tiempos cortos, que de paso prueba la prioridad de lectura.
+
+### Pendientes detectados
+- El nombre se guarda como se escribió ("zDENKO maría"); el boleto usará `primerNombre` (Fase 3).
+- El regreso automático del boleto llega en la Fase 3; el panel admin con PIN, en la Fase 4.
+
+---
+
 ## 2026-10-05 — Formulario de registro, validaciones y teclado en pantalla
 
 **Fase:** 2 — Registro y quiz (incluye `validation.ts`, que el plan ubica en la Fase 1)
@@ -330,16 +414,3 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 ### Notas
 - Un segundo `electron-vite dev` falló con `EMFILE` (se agotó el límite de inotify del sistema). Por eso la segunda ventana se conectó al servidor existente: `ELECTRON_RENDERER_URL=http://localhost:5173 TOTEM_PANTALLA=boleto electron . --user-data-dir=…`, después de compilar.
 
----
-
-## 2026-10-08 — El resto del quiz regresa a los colores de CONAIP
-
-**Fase:** 3 — Interfaz final
-
-- A pedido del cliente, solo IDLE usa la combinación CONAIP × Eliot. Registro, Quiz, Calculando, Boleto, Admin, Stage y DevNav regresan exactamente a como estaban en el último commit (azul, rojo, dorado y blanco).
-- `global.css`: se restauraron los estilos originales; solo se conserva la sección IDLE (franja de logos, titular, botón y mosaico).
-- `tokens.css`: regresan los tokens originales (`--azul-oscuro`, `--dorado`, `--texto-suave` y `--error`). De la paleta de Eliot quedan solo los tonos que usa el mosaico: `--amarillo-x`, `--amarillo-2`, `--amarillo-4`, `--amarillo-6`, `--negro-80` y `--negro-20`.
-- Se resuelve el pendiente "el resto de las pantallas sigue en amarillo y negro" de la entrada anterior.
-- Verificación:
-  - 93 pruebas pasan; typecheck y lint limpios.
-  - Capturas del build: IDLE, Registro con teclado y error, y Quiz, sin errores de consola.
