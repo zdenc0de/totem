@@ -1,8 +1,24 @@
 import type { Talento } from './types'
+import { TALENTOS } from './result'
 
 export type Pregunta = {
   texto: string
   opciones: Record<Talento, string>
+}
+
+/**
+ * Orden de las opciones para cada pregunta, barajado con Fisher–Yates (CLAUDE.md §5).
+ * Se baraja una vez por participante, así "Atrás" muestra el mismo orden.
+ */
+export function barajarOpciones(aleatorio: () => number = Math.random): Talento[][] {
+  return PREGUNTAS.map(() => {
+    const orden = [...TALENTOS]
+    for (let i = orden.length - 1; i > 0; i--) {
+      const j = Math.floor(aleatorio() * (i + 1))
+      ;[orden[i], orden[j]] = [orden[j], orden[i]]
+    }
+    return orden
+  })
 }
 
 // CLAUDE.md §5. Índice 0 = pregunta 1.

@@ -7,6 +7,10 @@ export const NOMBRE_MAX = 60
 export const EMAIL_MAX = 80
 export const TELEFONO_DIGITOS = 10
 
+// Duplicados (§9): se revisan en el proceso principal al tocar "Continuar".
+export const MSG_EMAIL_DUPLICADO = 'Este correo ya participó. Regístrate con otro correo.'
+export const MSG_TELEFONO_DUPLICADO = 'Este teléfono ya participó. Regístrate con otro número.'
+
 export type CamposRegistro = Pick<Registro, 'nombre' | 'apellido' | 'email' | 'telefono'> & {
   aceptoPrivacidad: boolean
 }
