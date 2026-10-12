@@ -521,7 +521,10 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 - `app.setLoginItemSettings({ openAtLogin: true })`, solo en la app instalada.
 
 ### Instalador
-- `npm run build:win` desde Linux genera `dist/totem-talento-0.1.0-setup.exe` (NSIS x64). No hay módulos en `node_modules` del paquete: todo va empaquetado por electron-vite. `content.json` queda en `resources\`, junto al ejecutable.
+- `npm run build:win` desde Linux genera `dist/totem-talento-0.1.0-setup.exe` (NSIS x64, ~112 MB). No hay módulos en `node_modules` del paquete: todo va empaquetado por electron-vite. `content.json` queda en `resources\`, junto al ejecutable.
+- Al revisar el paquete aparecieron dos problemas:
+  - Un `resources/app-update.yml` apuntando a GitHub. electron-builder lo deduce del remoto de git aunque no haya `publish`. Era inerte (no hay `electron-updater`), pero se quitó con `publish: null`, y `no-network.test.ts` ahora exige exactamente esa línea.
+  - El `app.asar` incluía `.claude/`, `AGENTS.md`, `BITACORAS.md` y las imágenes de inspiración. Se excluyeron en `files`; ahora solo lleva `out/`, `package.json` y el ícono.
 
 ### README
 - Desarrollo: `TOTEM_PANTALLA`, `TOTEM_NOMBRE` y `TOTEM_EXPORT_DIR`; PIN de fábrica.
@@ -533,7 +536,7 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 - Modificados:
   - `src/main/{ipc,index}.ts`, `src/preload/index.ts` y `src/shared/ipc.ts`.
   - `src/renderer/screens/Admin.tsx`, `src/renderer/state/useInactividad.ts` y `src/renderer/styles/global.css`.
-  - `README.md`.
+  - `README.md`, `electron-builder.yml` y `src/no-network.test.ts`.
 
 ### Verificación
 - 169 pruebas pasan, incluida `export.test.ts`: columnas, orden, BOM, escapado, fórmulas, nombre del archivo y un `.xlsx` que exceljs vuelve a leer con acentos y ñ. Typecheck, lint y prettier limpios.
