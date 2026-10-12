@@ -8,6 +8,10 @@ files:
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!vitest.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md,CLAUDE.md}'
+  - '!{AGENTS.md,BITACORAS.md}'
+  - '!.claude/**'
+  # Los logos ya van dentro de out/renderer/assets (Vite los empaqueta).
+  - '!assets/**'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
@@ -27,4 +31,6 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 npmRebuild: false
-# Sin `publish`: el tótem no debe buscar actualizaciones (cero red).
+# Sin publicación: el tótem no debe buscar actualizaciones (cero red). `null` explícito, porque
+# si no, electron-builder deduce GitHub del remoto de git y genera resources/app-update.yml.
+publish: null

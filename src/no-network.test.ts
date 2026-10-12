@@ -35,7 +35,8 @@ describe('sin red', () => {
 
   it('no hay configuración de auto-update', () => {
     const builder = readFileSync(join(RAIZ, 'electron-builder.yml'), 'utf8')
-    expect(builder).not.toMatch(/^publish:/m)
+    // `publish: null` es lo único permitido: sin él, electron-builder deduce GitHub del remoto.
+    expect(builder.match(/^publish:.*$/gm)).toEqual(['publish: null'])
     const pkg = JSON.parse(readFileSync(join(RAIZ, 'package.json'), 'utf8'))
     const deps = { ...pkg.dependencies, ...pkg.devDependencies }
     expect(Object.keys(deps)).not.toContain('electron-updater')
