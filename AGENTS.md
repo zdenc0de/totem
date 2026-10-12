@@ -259,5 +259,9 @@ resources/
 Pausar Windows Update, desactivar notificaciones (Asistente de concentración), suspensión y apagado de pantalla en "Nunca", desactivar gestos de borde (`HKLM\SOFTWARE\Policies\Microsoft\Windows\EdgeUI\AllowEdgeSwipe = 0`), desactivar la aparición automática del teclado táctil, inicio de sesión automático, escalado de pantalla al 100% y ocultar la barra de tareas. Configurar un tótem como T1 y el otro como T2 desde el panel admin.
 
 
-## Notas:
-Al realizar commits, NUNCA agregarte como co autor.
+## Para los commits:
+- NUNCA agregarte como co autor.
+- Mensaje en una sola linea, de forma breve y concisa.
+
+## Notas
+- Nunca crees ramas almenos que yo te lo pida explicitamente.
