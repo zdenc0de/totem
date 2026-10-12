@@ -62,11 +62,12 @@ export async function generarQrs(
       if (qrImage) {
         qr[juego] = leerImagen(qrImage, dirBase)
       } else if (esUrlWeb(qrUrl)) {
-        // Nivel Q (25 %) y zona blanca de 4 módulos: se escanea fácil desde el celular.
+        // Nivel Q (25 %). La tarjeta blanca del boleto completa la zona blanca alrededor del
+        // margen de 2 módulos; 920 px es el doble del tamaño en pantalla (460 px).
         qr[juego] = await QRCode.toDataURL(qrUrl, {
           errorCorrectionLevel: 'Q',
-          margin: 4,
-          width: 760
+          margin: 2,
+          width: 920
         })
       }
     } catch (err) {

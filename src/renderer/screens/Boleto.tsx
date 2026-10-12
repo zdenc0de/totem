@@ -1,59 +1,53 @@
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { primerNombre } from '@shared/nombre'
 import { useContenido } from '../state/contenido'
+import { Ticket } from '../components/Ticket'
 import type { ScreenProps } from './types'
 
-// PROVISIONAL (Fase 1: resultado real; Fase 3: boleto con QR e identidad visual).
+// Resultado (CLAUDE.md §7). Vuelve solo a IDLE a los `boletoSeg` segundos o al tocar "Terminar";
+// el botón se va vaciando y muestra los segundos que faltan.
 export function Boleto({ state, dispatch }: ScreenProps): React.JSX.Element {
-  const { talentos } = useContenido()
-  const primerNombre = state.registro?.nombre.split(' ')[0] ?? ''
-  const talento = state.resultado ? talentos[state.resultado.talento].nombre : ''
+  const { talentos, juegos, qr, tiempos, showGameOnTicket } = useContenido()
+  const [restante, setRestante] = useState(tiempos.boletoSeg)
+
+  useEffect(() => {
+    const fin = Date.now() + tiempos.boletoSeg * 1000
+    const reloj = setInterval(() => {
+      const queda = Math.ceil((fin - Date.now()) / 1000)
+      if (queda <= 0) dispatch({ type: 'REINICIAR' })
+      else setRestante(queda)
+    }, 250)
+    return () => clearInterval(reloj)
+  }, [tiempos.boletoSeg, dispatch])
+
+  const resultado = state.resultado
+  if (!resultado) return <div className="pantalla boleto" />
+  const talento = talentos[resultado.talento]
 
   return (
-    <div className="pantalla" style={{ alignItems: 'center', textAlign: 'center', gap: 48 }}>
-      <div
-        style={{
-          marginTop: 80,
-          width: 860,
-          height: 1300,
-          borderRadius: 48,
-          border: '12px solid var(--dorado)',
-          background: 'var(--azul-oscuro)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 40,
-          padding: 64
-        }}
+    <div className="pantalla boleto">
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 160, damping: 20 }}
       >
-        <p style={{ fontSize: 48 }}>{primerNombre}, tu tipo de talento es</p>
-        <h2 style={{ fontSize: 88, fontWeight: 800 }}>{talento}</h2>
-        <div
-          style={{
-            width: 420,
-            height: 420,
-            background: 'var(--blanco)',
-            borderRadius: 24,
-            color: 'var(--azul)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 40,
-            fontWeight: 700
-          }}
-        >
-          QR
-        </div>
-        <p style={{ fontSize: 32, color: 'var(--texto-suave)' }}>
-          Respuestas: {state.respuestas.join(' ')}
-        </p>
-      </div>
-      <div style={{ flex: 1 }} />
-      <button
-        className="boton"
-        style={{ width: 600 }}
-        onClick={() => dispatch({ type: 'REINICIAR' })}
-      >
-        Terminar
+        <Ticket
+          nombre={primerNombre(state.registro?.nombre ?? '')}
+          talento={talento.nombre}
+          frase={talento.frase}
+          qr={qr[resultado.juego]}
+          juego={showGameOnTicket ? juegos[resultado.juego].nombre : undefined}
+        />
+      </motion.div>
+
+      <button className="boton boleto__terminar" onClick={() => dispatch({ type: 'REINICIAR' })}>
+        <span
+          className="boleto__terminar-tiempo"
+          style={{ animationDuration: `${tiempos.boletoSeg}s` }}
+          aria-hidden="true"
+        />
+        <span className="boleto__terminar-texto">Terminar ({restante})</span>
       </button>
     </div>
   )
