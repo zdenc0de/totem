@@ -201,6 +201,10 @@ p {
   background: rgba(0, 0, 0, 0.75);
 }
 
+.modal--encima {
+  z-index: 50;
+}
+
 .modal__tarjeta {
   display: flex;
   flex-direction: column;

@@ -1,7 +1,11 @@
+import { useEffect } from 'react'
 import type { ScreenProps } from './types'
 
 // PROVISIONAL (Fase 4: PIN, estadísticas, exportación e ID de tótem).
 export function Admin({ dispatch }: ScreenProps): React.JSX.Element {
+  // Al salir del panel (botón o inactividad), main vuelve a exigir el PIN.
+  useEffect(() => () => void window.totem.admin.bloquear(), [])
+
   return (
     <div className="pantalla" style={{ gap: 48, background: 'var(--negro)' }}>
       <h2 style={{ fontSize: 72, fontWeight: 800, marginTop: 80 }}>Panel de administrador</h2>

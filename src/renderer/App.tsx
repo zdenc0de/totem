@@ -1,9 +1,14 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import type { ConfigRenderer } from '@shared/content'
 import { Stage } from './components/Stage'
 import { HotCorner } from './components/HotCorner'
 import { DevNav } from './components/DevNav'
+import { Modal } from './components/Modal'
 import { ESTADO_INICIAL, flowReducer, Pantalla } from './state/flow'
+import { ContenidoContext } from './state/contenido'
+import { useInactividad } from './state/useInactividad'
+import { estadoInicialDev } from './state/dev'
 import type { ScreenProps } from './screens/types'
 import { Idle } from './screens/Idle'
 import { Registro } from './screens/Registro'
@@ -22,8 +27,8 @@ const PANTALLAS: Record<Pantalla, (p: ScreenProps) => React.JSX.Element> = {
 }
 
 export default function App(): React.JSX.Element {
-  const [state, dispatch] = useReducer(flowReducer, ESTADO_INICIAL)
-  const Actual = PANTALLAS[state.pantalla]
+  // undefined: cargando; null: main no respondió (fuera de servicio).
+  const [config, setConfig] = useState<ConfigRenderer | null | undefined>(undefined)
 
   useEffect(() => {
     const bloquear = (e: Event): void => e.preventDefault()
@@ -40,8 +45,38 @@ export default function App(): React.JSX.Element {
     }
   }, [])
 
+  useEffect(() => {
+    window.totem
+      .getConfig()
+      .then(setConfig)
+      .catch(() => setConfig(null))
+  }, [])
+
   return (
     <Stage>
+      {config === null && (
+        <div className="pantalla" style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <p style={{ fontSize: 56, fontWeight: 700 }}>Fuera de servicio</p>
+        </div>
+      )}
+      {config && (
+        <ContenidoContext.Provider value={config}>
+          <Flujo config={config} />
+        </ContenidoContext.Provider>
+      )}
+    </Stage>
+  )
+}
+
+function Flujo({ config }: { config: ConfigRenderer }): React.JSX.Element {
+  const [state, dispatch] = useReducer(flowReducer, config, (c) =>
+    import.meta.env.DEV ? estadoInicialDev(c) : ESTADO_INICIAL
+  )
+  const avisoInactividad = useInactividad(state.pantalla, config.tiempos, dispatch)
+  const Actual = PANTALLAS[state.pantalla]
+
+  return (
+    <>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={state.pantalla}
@@ -57,7 +92,19 @@ export default function App(): React.JSX.Element {
       {state.pantalla === 'idle' && (
         <HotCorner onActivar={() => dispatch({ type: 'ABRIR_ADMIN' })} />
       )}
-      {import.meta.env.DEV && <DevNav actual={state.pantalla} dispatch={dispatch} />}
-    </Stage>
+      {/* Cualquier toque (también el del botón) reinicia el temporizador y oculta el aviso. */}
+      <Modal
+        abierto={avisoInactividad !== null}
+        titulo="¿Sigues ahí?"
+        boton="Sí, sigo aquí"
+        encima
+        onCerrar={() => {}}
+      >
+        Volveremos al inicio en {avisoInactividad} s y se borrarán tus datos.
+      </Modal>
+      {import.meta.env.DEV && (
+        <DevNav actual={state.pantalla} config={config} dispatch={dispatch} />
+      )}
+    </>
   )
 }

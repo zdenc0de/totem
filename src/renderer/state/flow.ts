@@ -1,5 +1,6 @@
 // Máquina de estados del flujo (CLAUDE.md §4). Reducer puro.
 import type { Talento } from '@shared/types'
+import type { Resultado } from '@shared/result'
 import { PREGUNTAS } from '@shared/quiz'
 
 export type Pantalla = 'idle' | 'registro' | 'quiz' | 'calculando' | 'boleto' | 'admin'
@@ -19,32 +20,42 @@ export type FlowState = {
   preguntaActual: number
   /** Momento (ms) en que se entró a REGISTRO, para calcular duracionSeg. */
   inicioMs: number | null
+  /** Orden de las opciones de cada pregunta, barajado una vez por participante. */
+  ordenOpciones: Talento[][]
+  resultado: Resultado | null
 }
 
 export type FlowAction =
-  | { type: 'INICIAR'; ahoraMs: number }
+  | { type: 'INICIAR'; ahoraMs: number; ordenOpciones: Talento[][] }
   | { type: 'ENVIAR_REGISTRO'; datos: DatosRegistro }
   | { type: 'RESPONDER'; talento: Talento }
   | { type: 'ATRAS' }
-  | { type: 'CALCULO_TERMINADO' }
+  | { type: 'CALCULO_TERMINADO'; resultado: Resultado }
   | { type: 'REINICIAR' }
   | { type: 'ABRIR_ADMIN' }
   | { type: 'CERRAR_ADMIN' }
-  | { type: 'DEV_IR'; pantalla: Pantalla }
+  | { type: 'DEV_IR'; estado: FlowState }
 
 export const ESTADO_INICIAL: FlowState = {
   pantalla: 'idle',
   registro: null,
   respuestas: [],
   preguntaActual: 0,
-  inicioMs: null
+  inicioMs: null,
+  ordenOpciones: [],
+  resultado: null
 }
 
 export function flowReducer(state: FlowState, action: FlowAction): FlowState {
   switch (action.type) {
     case 'INICIAR':
       if (state.pantalla !== 'idle') return state
-      return { ...ESTADO_INICIAL, pantalla: 'registro', inicioMs: action.ahoraMs }
+      return {
+        ...ESTADO_INICIAL,
+        pantalla: 'registro',
+        inicioMs: action.ahoraMs,
+        ordenOpciones: action.ordenOpciones
+      }
 
     case 'ENVIAR_REGISTRO':
       if (state.pantalla !== 'registro') return state
@@ -72,7 +83,7 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
 
     case 'CALCULO_TERMINADO':
       if (state.pantalla !== 'calculando') return state
-      return { ...state, pantalla: 'boleto' }
+      return { ...state, pantalla: 'boleto', resultado: action.resultado }
 
     // Volver a IDLE siempre borra todo: no puede quedar nada del participante anterior.
     case 'REINICIAR':
@@ -86,6 +97,6 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return ESTADO_INICIAL
 
     case 'DEV_IR':
-      return { ...state, pantalla: action.pantalla }
+      return action.estado
   }
 }

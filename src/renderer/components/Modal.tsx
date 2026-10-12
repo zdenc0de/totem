@@ -6,15 +6,19 @@ type Props = {
   titulo: string
   onCerrar: () => void
   children: ReactNode
+  boton?: string
+  /** Por encima de todo, incluido el teclado (aviso de inactividad). */
+  encima?: boolean
 }
 
 // Solo se cierra con su botón: un toque errático en el fondo no lo descarta.
-export function Modal({ abierto, titulo, onCerrar, children }: Props): React.JSX.Element {
+export function Modal(props: Props): React.JSX.Element {
+  const { abierto, titulo, onCerrar, children, boton = 'Cerrar', encima = false } = props
   return (
     <AnimatePresence>
       {abierto && (
         <motion.div
-          className="modal"
+          className={encima ? 'modal modal--encima' : 'modal'}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -33,7 +37,7 @@ export function Modal({ abierto, titulo, onCerrar, children }: Props): React.JSX
             <h2 className="modal__titulo">{titulo}</h2>
             <div className="modal__cuerpo">{children}</div>
             <button className="boton" onClick={onCerrar}>
-              Cerrar
+              {boton}
             </button>
           </motion.div>
         </motion.div>

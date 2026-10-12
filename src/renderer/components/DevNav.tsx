@@ -1,14 +1,18 @@
 import type { Dispatch } from 'react'
+import type { ConfigRenderer } from '@shared/content'
 import type { FlowAction, Pantalla } from '../state/flow'
+import { estadoDev } from '../state/dev'
 
 const TODAS: Pantalla[] = ['idle', 'registro', 'quiz', 'calculando', 'boleto', 'admin']
 
 /** Barra para saltar entre pantallas. Solo existe en desarrollo (no se empaqueta). */
 export function DevNav({
   actual,
+  config,
   dispatch
 }: {
   actual: Pantalla
+  config: ConfigRenderer
   dispatch: Dispatch<FlowAction>
 }): React.JSX.Element {
   return (
@@ -27,7 +31,7 @@ export function DevNav({
       {TODAS.map((p) => (
         <button
           key={p}
-          onClick={() => dispatch({ type: 'DEV_IR', pantalla: p })}
+          onClick={() => dispatch({ type: 'DEV_IR', estado: estadoDev(p, config) })}
           style={{
             fontSize: 20,
             padding: '8px 14px',

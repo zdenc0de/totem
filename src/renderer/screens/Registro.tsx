@@ -1,18 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   EMAIL_MAX,
+  MSG_EMAIL_DUPLICADO,
+  MSG_TELEFONO_DUPLICADO,
   NOMBRE_MAX,
   TELEFONO_DIGITOS,
   esRegistroValido,
   limpiarEmail,
   limpiarNombre,
   limpiarTelefono,
+  normalizarEmail,
   normalizarRegistro,
   validarRegistro,
   type CamposRegistro
 } from '@shared/validation'
-import { TEXTO_PRIVACIDAD, bloquesAviso } from '@shared/privacidad'
+import { bloquesAviso } from '@shared/privacidad'
+import { useContenido } from '../state/contenido'
 import { Modal } from '../components/Modal'
 import { Teclado } from '../components/Teclado'
 import { borrar, escribir, mayusculaAutomatica, type DisenoTeclado } from '../components/teclas'
@@ -39,9 +43,6 @@ const SIGUIENTE: Record<CampoTexto, CampoTexto | null> = {
   telefono: null
 }
 
-// Cuando exista content.json, el texto vendrá de privacidad.texto (CLAUDE.md §12).
-const AVISO = bloquesAviso(TEXTO_PRIVACIDAD)
-
 const VACIO: CamposRegistro = {
   nombre: '',
   apellido: '',
@@ -57,8 +58,9 @@ const NINGUNO_TOCADO: Record<keyof CamposRegistro, boolean> = {
   aceptoPrivacidad: false
 }
 
-// PROVISIONAL (Fase 2: falta el chequeo de correo duplicado).
 export function Registro({ state, dispatch }: ScreenProps): React.JSX.Element {
+  const { privacidad } = useContenido()
+  const aviso = useMemo(() => bloquesAviso(privacidad.texto), [privacidad.texto])
   // Al volver del quiz con "Atrás" se recuperan los datos ya capturados.
   const [campos, setCampos] = useState<CamposRegistro>(state.registro ?? VACIO)
   // Un error se muestra hasta que el campo se "toca": al dejarlo con algo escrito o al
@@ -67,9 +69,14 @@ export function Registro({ state, dispatch }: ScreenProps): React.JSX.Element {
   // Campo que recibe lo tecleado; el teclado en pantalla está abierto mientras haya uno.
   const [activo, setActivo] = useState<CampoTexto | null>(null)
   const [verAviso, setVerAviso] = useState(false)
+  // Correo y teléfono que main reportó como ya registrados; el error se va al cambiarlos.
+  const [repetidos, setRepetidos] = useState<{ email?: string; telefono?: string }>({})
+  const [revisando, setRevisando] = useState(false)
   const inputs = useRef<Partial<Record<CampoTexto, HTMLInputElement | null>>>({})
 
   const errores = validarRegistro(campos)
+  errores.email ??= repetidos.email === normalizarEmail(campos.email) ? MSG_EMAIL_DUPLICADO : null
+  errores.telefono ??= repetidos.telefono === campos.telefono ? MSG_TELEFONO_DUPLICADO : null
   const valido = esRegistroValido(errores)
   const error = (campo: keyof CamposRegistro): string | null =>
     tocados[campo] ? errores[campo] : null
@@ -94,18 +101,38 @@ export function Registro({ state, dispatch }: ScreenProps): React.JSX.Element {
     }
   }, [activo, campos])
 
-  function continuar(): void {
-    if (!valido) {
-      setTocados({
-        nombre: true,
-        apellido: true,
-        email: true,
-        telefono: true,
-        aceptoPrivacidad: true
+  const tocarTodos = (): void =>
+    setTocados({
+      nombre: true,
+      apellido: true,
+      email: true,
+      telefono: true,
+      aceptoPrivacidad: true
+    })
+
+  async function continuar(): Promise<void> {
+    if (revisando) return
+    if (!valido) return tocarTodos()
+    const datos = normalizarRegistro(campos)
+    setRevisando(true)
+    try {
+      const dup = await window.totem.existeDuplicado({
+        email: datos.email,
+        telefono: datos.telefono
       })
-      return
+      if (dup.email || dup.telefono) {
+        setRepetidos({
+          email: dup.email ? datos.email : undefined,
+          telefono: dup.telefono ? datos.telefono : undefined
+        })
+        setActivo(null)
+        setRevisando(false)
+        return tocarTodos()
+      }
+    } catch {
+      // Si main no responde, se sigue: al guardar se vuelve a revisar.
     }
-    dispatch({ type: 'ENVIAR_REGISTRO', datos: normalizarRegistro(campos) })
+    dispatch({ type: 'ENVIAR_REGISTRO', datos })
   }
 
   return (
@@ -239,7 +266,7 @@ export function Registro({ state, dispatch }: ScreenProps): React.JSX.Element {
 
       <Modal abierto={verAviso} titulo="Aviso de privacidad" onCerrar={() => setVerAviso(false)}>
         <div className="aviso">
-          {AVISO.map((bloque, i) =>
+          {aviso.map((bloque, i) =>
             bloque.tipo === 'titulo' ? (
               <h3 key={i}>{bloque.texto}</h3>
             ) : bloque.tipo === 'lista' ? (

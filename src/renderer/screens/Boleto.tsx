@@ -1,8 +1,11 @@
+import { useContenido } from '../state/contenido'
 import type { ScreenProps } from './types'
 
 // PROVISIONAL (Fase 1: resultado real; Fase 3: boleto con QR e identidad visual).
 export function Boleto({ state, dispatch }: ScreenProps): React.JSX.Element {
+  const { talentos } = useContenido()
   const primerNombre = state.registro?.nombre.split(' ')[0] ?? ''
+  const talento = state.resultado ? talentos[state.resultado.talento].nombre : ''
 
   return (
     <div className="pantalla" style={{ alignItems: 'center', textAlign: 'center', gap: 48 }}>
@@ -23,7 +26,7 @@ export function Boleto({ state, dispatch }: ScreenProps): React.JSX.Element {
         }}
       >
         <p style={{ fontSize: 48 }}>{primerNombre}, tu tipo de talento es</p>
-        <h2 style={{ fontSize: 88, fontWeight: 800 }}>Talento …</h2>
+        <h2 style={{ fontSize: 88, fontWeight: 800 }}>{talento}</h2>
         <div
           style={{
             width: 420,

@@ -1,3 +1,4 @@
+import { barajarOpciones } from '@shared/quiz'
 import { Mosaico } from '../components/Mosaico'
 import logoConaip from '../../../assets/logos/conaip.svg'
 import logoEliot from '../../../assets/logos/elliot_svg.svg'
@@ -8,7 +9,9 @@ export function Idle({ dispatch }: ScreenProps): React.JSX.Element {
   return (
     <div
       className="pantalla idle"
-      onPointerDown={() => dispatch({ type: 'INICIAR', ahoraMs: Date.now() })}
+      onPointerDown={() =>
+        dispatch({ type: 'INICIAR', ahoraMs: Date.now(), ordenOpciones: barajarOpciones() })
+      }
     >
       <Mosaico />
       <div className="idle__logos">
