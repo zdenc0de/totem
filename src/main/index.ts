@@ -1,9 +1,12 @@
-import { app, BrowserWindow, ipcMain, Menu, powerSaveBlocker, session } from 'electron'
+import { app, BrowserWindow, Menu, powerSaveBlocker, session } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
-import { IPC } from '@shared/ipc'
 import { log } from './log'
 import { autoRecuperar, bloquearAtajos, endurecerContenido, endurecerSesion } from './hardening'
+import { cargarContenido, generarQrs } from './config'
+import { crearStorage } from './storage'
+import { crearSettings } from './settings'
+import { registrarIpc } from './ipc'
 
 const devServerUrl = !app.isPackaged ? process.env['ELECTRON_RENDERER_URL'] : undefined
 const esDev = !app.isPackaged
@@ -12,6 +15,7 @@ const modoKiosco = app.isPackaged || process.env['TOTEM_KIOSK'] === '1'
 
 let ventana: BrowserWindow | null = null
 let salidaPermitida = false
+let bloquearAdmin = (): void => {}
 
 // Sin conexiones en segundo plano de Chromium.
 app.commandLine.appendSwitch('disable-background-networking')
@@ -29,7 +33,15 @@ if (!app.requestSingleInstanceLock()) {
     if (ventana.isMinimized()) ventana.restore()
     ventana.focus()
   })
-  app.whenReady().then(iniciar)
+  app
+    .whenReady()
+    .then(iniciar)
+    .catch((err) => {
+      // Sin datos no se puede registrar a nadie: la ventana abre y el renderer muestra
+      // "fuera de servicio" porque getConfig no responde.
+      log.error('Fallo al iniciar', err)
+      if (!ventana) crearVentana()
+    })
 }
 
 function salir(): void {
@@ -38,7 +50,7 @@ function salir(): void {
   app.quit()
 }
 
-function iniciar(): void {
+async function iniciar(): Promise<void> {
   log.info('Inicio de la app', {
     version: app.getVersion(),
     electron: process.versions.electron,
@@ -51,10 +63,26 @@ function iniciar(): void {
 
   powerSaveBlocker.start('prevent-display-sleep')
 
-  // TODO Fase 4: exigir PIN de administrador antes de salir.
-  ipcMain.handle(IPC.adminSalir, () => salir())
+  const userData = app.getPath('userData')
+  const dirData = join(userData, 'data')
+  const cargado = cargarContenido([join(userData, 'content.json'), rutaContenidoEmpaquetado()], log)
+  const ipc = registrarIpc({
+    storage: crearStorage(dirData, log),
+    settings: crearSettings(dirData, log),
+    contenido: cargado.contenido,
+    qr: await generarQrs(cargado, log),
+    salir
+  })
+  bloquearAdmin = ipc.bloquearAdmin
 
   crearVentana()
+}
+
+/** content.json empaquetado como extraResources; en desarrollo, el de resources/. */
+function rutaContenidoEmpaquetado(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'content.json')
+    : join(app.getAppPath(), 'resources', 'content.json')
 }
 
 function crearVentana(): void {
@@ -95,12 +123,27 @@ function crearVentana(): void {
 
   bloquearAtajos(ventana, esDev, salir)
   autoRecuperar(ventana)
+  // Cada carga (incluida la recarga tras un crash) vuelve a IDLE: el panel queda bloqueado.
+  ventana.webContents.on('did-start-loading', () => bloquearAdmin())
 
   if (devServerUrl) {
-    ventana.loadURL(devServerUrl)
+    ventana.loadURL(urlDesarrollo(devServerUrl))
   } else {
     ventana.loadFile(join(__dirname, '../renderer/index.html'))
   }
+}
+
+/**
+ * Solo desarrollo: TOTEM_PANTALLA=boleto npm run dev abre la app directo en esa pantalla, con
+ * datos de ejemplo (state/dev.ts). TOTEM_NOMBRE cambia el nombre de ejemplo.
+ */
+function urlDesarrollo(base: string): string {
+  const url = new URL(base)
+  const pantalla = process.env['TOTEM_PANTALLA']
+  const nombre = process.env['TOTEM_NOMBRE']
+  if (pantalla) url.searchParams.set('pantalla', pantalla)
+  if (nombre) url.searchParams.set('nombre', nombre)
+  return url.toString()
 }
 
 app.on('window-all-closed', () => app.quit())
