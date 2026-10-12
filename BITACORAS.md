@@ -438,3 +438,56 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 ### Notas
 - Un segundo `electron-vite dev` falló con `EMFILE` (se agotó el límite de inotify del sistema). Por eso la segunda ventana se conectó al servidor existente: `ELECTRON_RENDERER_URL=http://localhost:5173 TOTEM_PANTALLA=boleto electron . --user-data-dir=…`, después de compilar.
 
+---
+
+## 2026-10-11 — Boleto final con QR, regreso automático y Calculando
+
+**Fase:** 3 — Interfaz final
+
+### Boleto (`components/Ticket.tsx`, `screens/Boleto.tsx`)
+- Sigue el boleto del mockup del cliente (`assets/inspiration/Conaip_x_Elliot.jpeg`). Mide 936×1640 en el artboard.
+- **Forma (SVG):**
+  - Esquinas redondeadas, una muesca semicircular a cada lado y borde dorado que sigue las muescas.
+  - Fondo azul en degradado con un brillo al centro, bandas claras y franjas rojas en diagonal recortadas a la forma.
+  - Franja blanca de logos con una pestaña al centro.
+- **Contenido (HTML encima):**
+  - Logos de CONAIP y Eliot (`assets/logos/`).
+  - "Zdenko," (`primerNombre`, siempre capitalizado), "TU TIPO DE TALENTO ES" con acento rojo-blanco-dorado.
+  - Nombre del talento en Poppins 900 y la frase.
+  - QR de 460 px en una tarjeta blanca con borde dorado, o "QR pendiente".
+  - Banda "ESCANEA | para descubrir tu juego".
+  - Con `showGameOnTicket`, una insignia con el nombre del juego.
+- **Autoajuste (`components/useAjustarTexto.ts`):**
+  - Baja el tamaño de letra hasta que el texto quepa: el nombre de 104 a 36 px; el talento de 112 a 56 px en 2 líneas.
+  - Si ni en el mínimo cabe, el texto se parte en vez de cortarse.
+  - Tolerancia de 1 px a lo ancho y de 0.3 em a lo alto: la tinta de Poppins (comas, acentos) sale un poco del renglón, y sin esa tolerancia todo terminaba en el tamaño mínimo.
+- **Regreso automático:** a los `boletoSeg` segundos vuelve a IDLE. "Terminar (N)" muestra los segundos que faltan y su fondo se vacía con una animación CSS de `scaleX`.
+- **Entrada:** el boleto aparece con un resorte (`y` + `scale`) y el QR un poco después.
+
+### Calculando
+- Tres barras (rojo, blanco y dorado) que suben y bajan en secuencia (`scaleY`) sobre un degradado azul.
+
+### QR (`main/config.ts`)
+- Margen de 2 módulos (la tarjeta blanca completa la zona blanca) y PNG de 920 px, el doble de su tamaño en pantalla.
+
+**Archivos:**
+- Nuevos: `src/renderer/components/Ticket.tsx` y `src/renderer/components/useAjustarTexto.ts`.
+- Modificados: `src/renderer/screens/{Boleto,Calculando}.tsx`, `src/renderer/styles/global.css` y `src/main/config.ts`.
+
+### Verificación
+- 161 pruebas pasan; typecheck, lint y prettier limpios.
+- Build real a 1080×1920 (emulación de CDP), con capturas de cada caso:
+
+  | Nombre | Tamaño | Resultado |
+  |---|---|---|
+  | Zdenko | 104 px | Acelerador → QR |
+  | Lu | 104 px | Impacto → QR pendiente |
+  | Maximilianoalejandrogarcia (26) | 52 px | Versátil → QR |
+  | Aaaa… (30 letras) | 38 px, una línea | Versátil → QR pendiente |
+
+  - Ninguno desborda; el boleto y el botón quedan dentro del artboard y sin scroll.
+  - El QR mide 460 px (≥ 380).
+  - Regresa solo a IDLE con `boletoSeg` y sin errores de consola.
+
+### Pendientes detectados
+- Probar el escaneo con iPhone y Android a 30–50 cm en el tótem real (§17), con la URL definitiva.
