@@ -169,6 +169,31 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 
 ---
 
+## 2026-10-11 — Texto del aviso de privacidad
+
+**Fase:** 2 — Registro y quiz
+
+- El cliente entregó el aviso de privacidad de CONAIP. Se adaptó para leerse en el tótem sin cambiar su contenido legal:
+  - Se dividió en 13 secciones con título (Responsable, Finalidad, Datos que podemos solicitar, Derechos, etc.).
+  - Las enumeraciones largas pasaron a listas (finalidades, datos que se piden, derechos, pasos para ejercerlos).
+  - Se corrigieron erratas ("didferentes", "fisicos", "El presente Política", "Articulo", un "286" suelto, "recogidaNuestra").
+  - Se quitó el encabezado "Última actualización", que venía sin fecha.
+- `shared/privacidad.ts` (nuevo): `TEXTO_PRIVACIDAD`, `PRIVACY_VERSION = 'v1'` y `bloquesAviso`, que convierte el texto en títulos (`## `), listas (`- `) y párrafos. Así, cuando exista `content.json`, `privacidad.texto` seguirá siendo un solo string con el mismo formato.
+- `Registro.tsx`: el modal muestra el aviso con ese formato. `global.css`: estilos `.aviso` (títulos en azul, viñetas en rojo).
+
+**Archivos:**
+- Nuevos: `src/shared/privacidad.ts` y `src/shared/privacidad.test.ts`.
+- Modificados: `src/renderer/screens/Registro.tsx` y `src/renderer/styles/global.css`.
+
+### Verificación
+- 96 pruebas pasan (3 nuevas del parser y del texto); typecheck, lint y prettier limpios.
+- Capturas del build: el modal muestra los títulos y las listas, y hace scroll.
+
+### Pendientes detectados
+- Con el cliente: el texto habla de una aplicación móvil, CURP, fotografías y cámara, que el tótem no usa. También pide descargar un formato en PDF que no está enlazado. Falta la fecha de "Última actualización".
+
+---
+
 ## 2026-10-08 — Paleta de Eliot y rediseño de IDLE
 
 **Fase:** 3 — Interfaz final (adelanto: IDLE e identidad de color)

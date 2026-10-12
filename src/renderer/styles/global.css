@@ -229,6 +229,38 @@ p {
   white-space: pre-line;
 }
 
+/* Aviso de privacidad dentro del modal */
+.aviso {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-right: 16px;
+}
+
+.aviso h3 {
+  margin-top: 24px;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--azul);
+}
+
+.aviso h3:first-child {
+  margin-top: 0;
+}
+
+.aviso ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.aviso li::marker {
+  color: var(--rojo);
+}
+
 /* Teclado en pantalla */
 .teclado-panel {
   position: absolute;

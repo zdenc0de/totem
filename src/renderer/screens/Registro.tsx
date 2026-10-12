@@ -12,6 +12,7 @@ import {
   validarRegistro,
   type CamposRegistro
 } from '@shared/validation'
+import { TEXTO_PRIVACIDAD, bloquesAviso } from '@shared/privacidad'
 import { Modal } from '../components/Modal'
 import { Teclado } from '../components/Teclado'
 import { borrar, escribir, mayusculaAutomatica, type DisenoTeclado } from '../components/teclas'
@@ -38,8 +39,8 @@ const SIGUIENTE: Record<CampoTexto, CampoTexto | null> = {
   telefono: null
 }
 
-// PENDIENTE del cliente: vendrá de content.json → privacidad.texto (CLAUDE.md §12).
-const TEXTO_PRIVACIDAD = ''
+// Cuando exista content.json, el texto vendrá de privacidad.texto (CLAUDE.md §12).
+const AVISO = bloquesAviso(TEXTO_PRIVACIDAD)
 
 const VACIO: CamposRegistro = {
   nombre: '',
@@ -237,7 +238,21 @@ export function Registro({ state, dispatch }: ScreenProps): React.JSX.Element {
       </AnimatePresence>
 
       <Modal abierto={verAviso} titulo="Aviso de privacidad" onCerrar={() => setVerAviso(false)}>
-        {TEXTO_PRIVACIDAD || <span style={{ opacity: 0.5 }}>Texto pendiente.</span>}
+        <div className="aviso">
+          {AVISO.map((bloque, i) =>
+            bloque.tipo === 'titulo' ? (
+              <h3 key={i}>{bloque.texto}</h3>
+            ) : bloque.tipo === 'lista' ? (
+              <ul key={i}>
+                {bloque.items.map((item, j) => (
+                  <li key={j}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p key={i}>{bloque.texto}</p>
+            )
+          )}
+        </div>
       </Modal>
     </div>
   )
