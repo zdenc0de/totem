@@ -100,6 +100,80 @@ p {
   opacity: 0.4;
 }
 
+/* Quiz */
+.quiz {
+  gap: 40px;
+}
+
+.quiz__progreso {
+  height: 16px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.quiz__progreso-barra {
+  height: 100%;
+  border-radius: 8px;
+  background: var(--dorado);
+  transform-origin: left center;
+  transition: transform 300ms ease-out;
+}
+
+.quiz__contador {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.quiz__pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.quiz__texto {
+  min-height: 340px;
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.quiz__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.quiz__opcion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 24px 56px;
+  border: 6px solid transparent;
+  border-radius: var(--radio);
+  background: var(--blanco);
+  color: var(--azul);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    transform 80ms ease-out,
+    background-color 120ms ease-out;
+}
+
+.quiz__opcion:active {
+  transform: scale(0.97);
+}
+
+.quiz__opcion--marcada {
+  border-color: var(--blanco);
+  background: var(--dorado);
+  color: var(--azul-oscuro);
+}
+
 /* Formularios */
 .campo {
   display: flex;
