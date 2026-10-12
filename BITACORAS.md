@@ -278,6 +278,30 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 
 ---
 
+## 2026-10-11 — Quiz con opciones barajadas
+
+**Fase:** 2 — Registro y quiz
+
+- `screens/Quiz.tsx`:
+  - Usa el orden barajado al iniciar (`state.ordenOpciones`), así que "Atrás" muestra el mismo orden.
+  - La opción ya elegida queda marcada en dorado.
+  - La barra de progreso avanza con `scaleX` y cada pregunta entra con una transición corta (solo `transform` y `opacity`).
+- **Toques erráticos:** al elegir, la opción se resalta 220 ms y después se responde. Un `ref` bloquea al instante los demás toques. Con solo el estado no bastaba: dos toques en la misma tarea contestaban dos preguntas, porque React aún no había vuelto a renderizar.
+- `global.css`: clases `.quiz*` en lugar de estilos en línea.
+
+**Archivos:** `src/renderer/screens/Quiz.tsx` y `src/renderer/styles/global.css`.
+
+### Verificación
+- 161 pruebas pasan (`barajarOpciones` ya estaba probada en la Fase 1); typecheck y lint limpios.
+- En el build real, manejado por CDP:
+  - Un doble toque avanza una sola pregunta.
+  - "Atrás" regresa con el mismo orden y la opción marcada.
+  - Cambiar la respuesta de la pregunta 2 se refleja en lo guardado, y las respuestas guardadas coinciden con las elegidas.
+  - Los órdenes salieron barajados (`VIA AIV VIA AIV AVI`).
+  - Sin errores de consola.
+
+---
+
 ## 2026-10-08 — Paleta de Eliot y rediseño de IDLE
 
 **Fase:** 3 — Interfaz final (adelanto: IDLE e identidad de color)
