@@ -5,6 +5,7 @@ import { useContenido } from '../state/contenido'
 import type { ScreenProps } from './types'
 
 const DURACION_MS = 1500
+const BARRAS = ['var(--rojo)', 'var(--blanco)', 'var(--dorado)']
 
 // Aquí se guarda el registro (§4: solo al completar el quiz). La animación dura lo que tarde más
 // entre el guardado y 1.5 s. Si main no responde, el resultado se calcula aquí y el
@@ -39,19 +40,19 @@ export function Calculando({ state, dispatch }: ScreenProps): React.JSX.Element 
   }, [state.registro, state.respuestas, state.inicioMs, reglas, dispatch])
 
   return (
-    <div className="pantalla" style={{ justifyContent: 'center', alignItems: 'center', gap: 80 }}>
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        style={{
-          width: 200,
-          height: 200,
-          borderRadius: '50%',
-          border: '20px solid rgba(255,255,255,0.2)',
-          borderTopColor: 'var(--dorado)'
-        }}
-      />
-      <p style={{ fontSize: 56, fontWeight: 700 }}>Descubriendo tu talento…</p>
+    <div className="pantalla calculando">
+      <div className="calculando__barras" aria-hidden="true">
+        {BARRAS.map((color, i) => (
+          <motion.span
+            key={color}
+            className="calculando__barra"
+            style={{ background: color }}
+            animate={{ scaleY: [0.25, 1, 0.25] }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+      <p className="calculando__texto">Descubriendo tu talento…</p>
     </div>
   )
 }
