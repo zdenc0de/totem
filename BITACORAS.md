@@ -491,3 +491,60 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 
 ### Pendientes detectados
 - Probar el escaneo con iPhone y Android a 30–50 cm en el tótem real (§17), con la URL definitiva.
+
+---
+
+## 2026-10-11 — Fase 4: panel admin, exportación, arranque automático e instalador
+
+**Fase:** 4 — Admin y entrega (fecha planeada: 12–13 oct)
+
+### Panel admin (`screens/Admin.tsx`)
+- **Entrada:** 5 toques en la esquina → PIN con el teclado numérico propio (de 4 a 8 dígitos, mostrados como puntos). Un PIN incorrecto muestra "PIN incorrecto." En main, tras 5 errores seguidos hay 30 s de espera.
+- **Panel:**
+  - ID del tótem en la cabecera.
+  - Avisos: "ID sin confirmar", PIN de fábrica y QR pendiente por juego.
+  - Total de registros, conteo por talento y por juego.
+  - Selector T1/T2 (marcado solo cuando ya se confirmó).
+  - "Exportar a USB" con el resultado debajo y "Cambiar PIN" (escribirlo y confirmarlo).
+  - "Volver al quiz" y "Salir de la app" (pide un segundo toque en menos de 3 s).
+- **Inactividad:** el panel se cierra solo. Mientras está abierto el diálogo nativo de la USB (sus toques no llegan a la página), el panel avisa actividad con el evento `totem:actividad` para no cerrarse a media exportación.
+- Al salir del panel (botón, inactividad o recarga), main lo vuelve a bloquear.
+
+### Exportación (`main/export.ts`)
+- `tablaExport`: todos los campos (incluido Apellido), Q1..Q5, conteos, talento y juego en código y con su nombre legible, ordenado por fecha. La columna Tótem sirve para detectar duplicados al unir T1 y T2.
+- `aCsv`: BOM UTF-8, CRLF y comillas cuando hace falta. Antepone `'` a las celdas que empiezan con `= + - @` para que Excel no las tome como fórmula.
+- `aXlsx` (exceljs): hoja "Registros" con encabezado en negritas y fijo, autofiltro y anchos de columna.
+- `escribirExport`: escribe `registros_{T1}_{YYYY-MM-DD_HHmm}.xlsx` y `.csv` con fsync, para que la USB se pueda retirar en cuanto termina.
+- IPC `admin:exportar`: abre el diálogo de carpeta como hijo de la ventana kiosco y registra en el log el total y los nombres de archivo (sin datos personales). Solo en desarrollo, `TOTEM_EXPORT_DIR` sustituye el diálogo.
+
+### Arranque automático
+- `app.setLoginItemSettings({ openAtLogin: true })`, solo en la app instalada.
+
+### Instalador
+- `npm run build:win` desde Linux genera `dist/totem-talento-0.1.0-setup.exe` (NSIS x64). No hay módulos en `node_modules` del paquete: todo va empaquetado por electron-vite. `content.json` queda en `resources\`, junto al ejecutable.
+
+### README
+- Desarrollo: `TOTEM_PANTALLA`, `TOTEM_NOMBRE` y `TOTEM_EXPORT_DIR`; PIN de fábrica.
+- Dónde viven los datos y cómo editar `content.json` el día del evento.
+- Checklist de despliegue (§19) y de prueba en el tótem (§17).
+
+**Archivos:**
+- Nuevos: `src/main/export.ts` y `src/main/export.test.ts`.
+- Modificados:
+  - `src/main/{ipc,index}.ts`, `src/preload/index.ts` y `src/shared/ipc.ts`.
+  - `src/renderer/screens/Admin.tsx`, `src/renderer/state/useInactividad.ts` y `src/renderer/styles/global.css`.
+  - `README.md`.
+
+### Verificación
+- 169 pruebas pasan, incluida `export.test.ts`: columnas, orden, BOM, escapado, fórmulas, nombre del archivo y un `.xlsx` que exceljs vuelve a leer con acentos y ñ. Typecheck, lint y prettier limpios.
+- En el build real, manejado por CDP:
+  - Los 5 toques abren el PIN; un PIN incorrecto se rechaza y `1234` entra.
+  - Se ven los avisos y elegir T2 quita "ID sin confirmar".
+  - La exportación escribe `registros_T2_2026-10-11_2018.xlsx` y `.csv` (con BOM y acentos).
+  - Un PIN de confirmación distinto se rechaza; después se cambia el PIN.
+  - Al volver al quiz, main bloquea el panel: el PIN viejo ya no sirve y el nuevo sí.
+  - El panel se cierra solo por inactividad.
+  - Sin errores de consola.
+
+### Pendientes detectados
+- Todo lo que solo se prueba en Windows: el diálogo de la USB encima de la ventana kiosco, el arranque automático, los gestos de borde y el instalador mismo. Está en la checklist del README.
