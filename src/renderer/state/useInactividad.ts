@@ -7,6 +7,9 @@ import { useEffect, useRef, useState, type Dispatch } from 'react'
 import type { ConfigRenderer } from '@shared/content'
 import type { FlowAction, Pantalla } from './flow'
 
+/** Cuenta como actividad aunque no haya toques (p. ej. con el diálogo de exportación abierto). */
+export const EVENTO_ACTIVIDAD = 'totem:actividad'
+
 /** Segundos que quedan del aviso; `null` mientras no haya aviso. */
 export function useInactividad(
   pantalla: Pantalla,
@@ -38,11 +41,13 @@ export function useInactividad(
     // En captura: cuenta aunque un componente detenga la propagación del toque.
     window.addEventListener('pointerdown', tocar, true)
     window.addEventListener('keydown', tocar, true)
+    window.addEventListener(EVENTO_ACTIVIDAD, tocar)
     return () => {
       setRestante(null)
       clearInterval(reloj)
       window.removeEventListener('pointerdown', tocar, true)
       window.removeEventListener('keydown', tocar, true)
+      window.removeEventListener(EVENTO_ACTIVIDAD, tocar)
     }
   }, [vigilada, conAviso, tiempos, dispatch])
 

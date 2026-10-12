@@ -656,6 +656,147 @@ p {
   line-height: 1.15;
 }
 
+/* Admin */
+.admin {
+  gap: 40px;
+  background: var(--negro);
+}
+
+.admin__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.admin__titulo {
+  font-size: 64px;
+  font-weight: 800;
+}
+
+.admin__id {
+  padding: 8px 28px;
+  border: 4px solid var(--dorado);
+  border-radius: 999px;
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--dorado);
+}
+
+.admin__avisos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 28px 32px 28px 64px;
+  border-radius: var(--radio);
+  background: rgba(242, 183, 5, 0.14);
+  color: var(--dorado);
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.admin__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin__subtitulo {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.admin__total {
+  font-size: 160px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.admin__cifras,
+.admin__fila {
+  display: flex;
+  gap: 24px;
+}
+
+.admin__cifra {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 28px;
+  border-radius: var(--radio);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin__cifra-valor {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.admin__cifra-etiqueta {
+  font-size: 28px;
+  color: var(--texto-suave);
+}
+
+.admin__opcion {
+  flex: 1 1 0;
+  background: transparent;
+  border: 4px solid var(--blanco);
+}
+
+.admin__opcion--activa {
+  border-color: var(--dorado);
+  background: var(--dorado);
+  color: var(--negro);
+}
+
+.admin__mensaje {
+  min-height: 80px;
+  font-size: 30px;
+  white-space: pre-line;
+  color: var(--texto-suave);
+}
+
+.admin__instruccion {
+  font-size: 40px;
+  color: var(--texto-suave);
+}
+
+.admin__puntos {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.admin__punto {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--blanco);
+  border-radius: 50%;
+}
+
+.admin__punto--lleno {
+  background: var(--blanco);
+}
+
+.admin__error {
+  min-height: 48px;
+  font-size: 36px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--error);
+}
+
+.admin__teclado .teclado {
+  border-radius: 40px;
+}
+
 /* IDLE */
 .idle {
   justify-content: flex-end;
