@@ -12,6 +12,10 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+# content.json va junto al ejecutable (resources/) para poder editarse sin recompilar (§12).
+extraResources:
+  - from: resources/content.json
+    to: content.json
 win:
   executableName: totem-talento
   target:
