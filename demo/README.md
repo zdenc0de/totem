@@ -10,6 +10,7 @@ Versión de la app del tótem que corre en cualquier navegador, para que el clie
 - No se empaqueta en el instalador (`electron-builder.yml` excluye `demo/`).
 
 ```bash
-npm run build:demo     # genera demo/dist
-npm run deploy:demo    # build + publicar en el proyecto de Vercel totem-talento-demo
+npm run build:demo     # genera demo/dist para probarla localmente
 ```
+
+Se publica sola con cada push a `main` (proyecto `totem-talento-demo` en Vercel, Root Directory `demo`; ver el README principal).

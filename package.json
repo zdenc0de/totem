@@ -20,8 +20,7 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "typecheck:demo": "tsc --noEmit -p tsconfig.demo.json",
-    "build:demo": "vite build -c vite.demo.config.ts",
-    "deploy:demo": "npm run build:demo && vercel link --yes --project totem-talento-demo --cwd demo/dist && vercel deploy --prod --yes --cwd demo/dist"
+    "build:demo": "vite build -c vite.demo.config.ts"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

@@ -58,9 +58,20 @@ En desarrollo, `TOTEM_RESPALDO_RAICES=ruta1;ruta2` sustituye las unidades donde 
   - Con `qrImage` (un PNG o JPG junto al `content.json`), se usa esa imagen.
   - Sin ninguno, el boleto dice "QR pendiente" y el panel lo avisa.
 
+## Publicación en Vercel
+
+El repo está conectado a dos proyectos de Vercel; **cada push a `main` publica los dos**:
+
+| Proyecto | URL | Root Directory | Build |
+|---|---|---|---|
+| `totem-talento` (página del QR) | <https://totem-talento.vercel.app> | `web` | ninguno (archivos estáticos) |
+| `totem-talento-demo` (demo para el cliente) | <https://totem-talento-demo.vercel.app> | `demo` | install `cd .. && ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci`, build `cd .. && npm run build:demo`, output `dist` |
+
+La configuración vive en *Project Settings → Build and Deployment* de cada proyecto. Sin el Root Directory, Vercel compila la app de Electron desde la raíz y falla con "No Output Directory named dist".
+
 ## Demo web para revisión (`demo/`)
 
-La app del tótem completa en el navegador, para que el cliente la valide: <https://totem-talento-demo.vercel.app>. Mismo código y mismas pantallas; los registros se guardan en el navegador de quien revisa y "Exportar a USB" descarga el Excel y el CSV reales. Detalles en [demo/README.md](demo/README.md). Publicar: `npm run deploy:demo`.
+La app del tótem completa en el navegador, para que el cliente la valide: <https://totem-talento-demo.vercel.app>. Mismo código y mismas pantallas; los registros se guardan en el navegador de quien revisa y "Exportar a USB" descarga el Excel y el CSV reales. Detalles en [demo/README.md](demo/README.md).
 
 ## Página del QR (`web/`)
 
@@ -78,7 +89,7 @@ Cada QR del boleto abre la página de su talento, con la imagen de su reto y dos
   - `img/retos/{talento}.jpg`: 1080×1920 (tamaño de historia), con fondo azul CONAIP en lugar del marco blanco; es el archivo que se guarda o comparte. `{talento}.webp`: el boleto sin el marco blanco (transparente por fuera, recortado a 1032×1859) para mostrarlo sobre el azul de la página. `{talento}-mini.webp`: lo mismo a 270×486, para la página de inicio. Salen de `assets/tickets/tipoJuego/`.
   - `img/pixeles/`: la orilla de la banda de logos y la trama de Eliot (SVG).
 - Las tres páginas son iguales salvo el talento; si se cambia una, cambiar las tres.
-- Publicar: `cd web && npx vercel deploy --prod`. Si cambian las URLs, actualizar `talentos.{A,I,V}.qrUrl` en `content.json` (no hace falta reinstalar, ver arriba).
+- Si cambian las URLs, actualizar `talentos.{A,I,V}.qrUrl` en `content.json` (no hace falta reinstalar, ver arriba).
 - No se publica dentro de la app del tótem (`electron-builder.yml` excluye `web/`).
 
 ## Despliegue en el tótem (Windows 11)
