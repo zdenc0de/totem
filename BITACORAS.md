@@ -747,3 +747,20 @@ A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las
 ### Verificación
 - Recorrido completo con Edge, en local y sobre la URL publicada: inicio → registro (María José Núñez Peña, correo con mayúsculas) → 5 preguntas → calculando → boleto "María, tu tipo de talento es REFLEJO" con QR que se decodifica a `https://totem-talento.vercel.app/reflejo` → panel admin con PIN → "Exportar a USB" descarga `registros_T1_….xlsx` y `.csv`: correo normalizado, fecha como fecha de Excel, Reflejo → simulador, CSV con BOM y acentos. Cero errores en consola.
 - Vista de celular (iPhone 12) revisada. `/.env.local` y `/.vercel/project.json` responden 404 en la demo publicada.
+
+## 2026-10-14 — Publicación en Vercel desde GitHub para la página del QR y la demo
+
+**Fase:** pruebas y correcciones.
+
+- Problema: al conectar el repo de GitHub, los dos proyectos de Vercel compilaban desde la raíz: corrían el build de Electron (`out/`) y fallaban con "No Output Directory named dist found". Fallaban todos los push.
+- Se configuró cada proyecto (API de Vercel, *Project Settings → Build and Deployment*):
+  - `totem-talento` (página del QR): Root Directory `web`, sin build; se sirven los archivos estáticos con `web/vercel.json`.
+  - `totem-talento-demo`: Root Directory `demo`, install `cd .. && ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci` (no descarga el binario de Electron, que la demo no usa), build `cd .. && npm run build:demo`, output `dist`.
+- Desde ahora **cada push a `main` publica los dos**. Se quitó el script `deploy:demo` y las instrucciones de publicar con la CLI (con Root Directory ya no aplican).
+
+**Archivos:** `README.md` (sección "Publicación en Vercel"), `demo/README.md` y `package.json`.
+
+### Verificación
+- Despliegue de los dos proyectos desde `main` (commit `363843f`): ambos Ready, con sus dominios `totem-talento.vercel.app` y `totem-talento-demo.vercel.app`.
+- Página del QR: `/`, `/acelerador`, `/impulsor` y `/reflejo` responden 200 con el rediseño (`assets/…`), sin recursos rotos ni errores de JS (iPhone emulado). `package.json`, `src/…` y `.env.local` responden 404: solo se publica `web/`.
+- Demo: flujo completo sobre la URL publicada (registro → quiz → boleto con QR a `/reflejo` → panel con PIN → Excel y CSV correctos), sin errores en consola; `package.json` y `src/…` responden 404.
