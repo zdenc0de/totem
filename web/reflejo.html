@@ -10,72 +10,86 @@
       content="Tu tipo de talento es Reflejo. Tu reto: Simulador de carreras."
     />
     <link rel="preload" href="/assets/img/retos/reflejo.webp" as="image" type="image/webp" />
+    <link
+      rel="preload"
+      href="/assets/fonts/poppins-latin-900-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="/assets/css/estilos.css" />
   </head>
   <!-- Las tres páginas de talento son iguales salvo estos datos: si se cambia una, cambiar las tres. -->
   <body data-talento="reflejo">
     <main class="reto">
-      <p class="reto__intro">Reflejo, tu reto es:</p>
-      <img
-        class="reto__boleto"
-        src="/assets/img/retos/reflejo.webp"
-        width="1032"
-        height="1859"
-        alt="Tu tipo de talento es Reflejo. Tu reto: Simulador de carreras."
-      />
-
-      <div class="reto__acciones">
-        <p id="aviso" class="reto__aviso" role="status"></p>
-        <button id="historia" class="boton boton--principal" type="button">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="5" />
-            <circle cx="12" cy="12" r="4" />
-            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-          </svg>
-          Compartir en mi historia
-        </button>
-        <button id="guardar" class="boton boton--secundario" type="button">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 4v11" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 20h14" />
-          </svg>
-          Guardar imagen
-        </button>
+      <div class="reto__texto">
+        <p class="reto__intro">Reflejo, tu reto es:</p>
+        <h1 class="reto__juego" data-texto="Simulador de carreras">Simulador de carreras</h1>
       </div>
 
-      <div class="pie">
-        <p class="pie__texto">Etiquétanos en tu historia</p>
-        <a class="red" href="https://www.instagram.com/conaip_mx/">
-          <span class="red__contenido">
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-            </svg>
-            @CONAIP_MX
-          </span>
-        </a>
+      <div class="reto__escenario">
+        <div class="reto__columna">
+          <img
+            class="reto__boleto"
+            src="/assets/img/retos/reflejo.webp"
+            width="1032"
+            height="1859"
+            alt="Tu tipo de talento es Reflejo. Tu reto: Simulador de carreras."
+          />
+
+          <div class="reto__acciones">
+            <p id="aviso" class="reto__aviso" role="status"></p>
+            <button id="historia" class="boton boton--principal" type="button">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              Compartir en mi historia
+            </button>
+            <button id="guardar" class="boton boton--secundario" type="button">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 4v11" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M5 20h14" />
+              </svg>
+              Guardar imagen
+            </button>
+          </div>
+
+          <div class="pie">
+            <a class="red" href="https://www.instagram.com/conaip_mx/">
+              <span class="red__contenido">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+                @CONAIP_MX
+              </span>
+            </a>
+          </div>
+        </div>
       </div>
     </main>
     <script src="/assets/js/compartir.js" defer></script>
