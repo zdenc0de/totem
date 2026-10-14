@@ -758,8 +758,18 @@ p {
 
 /* Admin */
 .admin {
-  gap: 40px;
+  gap: 32px;
   background: var(--negro);
+  /* Solo para el staff: si los avisos no caben, el panel se desplaza en vez de cortar botones. */
+  overflow-y: auto;
+  touch-action: pan-y;
+  scrollbar-width: none;
+}
+
+.admin__reloj {
+  margin-top: 8px;
+  font-size: 28px;
+  color: var(--texto-suave);
 }
 
 .admin__cabecera {
@@ -811,7 +821,7 @@ p {
 }
 
 .admin__total {
-  font-size: 160px;
+  font-size: 120px;
   font-weight: 900;
   line-height: 1;
 }
@@ -856,7 +866,7 @@ p {
 }
 
 .admin__mensaje {
-  min-height: 80px;
+  min-height: 0;
   font-size: 30px;
   white-space: pre-line;
   color: var(--texto-suave);
@@ -1030,4 +1040,17 @@ p {
   .mosaico__cuadro {
     animation: none !important;
   }
+}
+
+/* Aviso para el staff en IDLE (ver useAlertaSistema): pequeño, en la esquina inferior derecha. */
+.idle__alerta {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--rojo);
+  box-shadow: 0 0 0 4px var(--blanco);
+  pointer-events: none;
 }

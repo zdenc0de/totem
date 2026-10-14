@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { EstadoAdmin } from '@shared/ipc'
+import type { EstadoAdmin, EstadoRespaldo } from '@shared/ipc'
 import type { TotemId } from '@shared/types'
 import { Teclado } from '../components/Teclado'
 import { useContenido } from '../state/contenido'
@@ -78,6 +78,12 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
     return () => clearInterval(latido)
   }, [exportando])
 
+  // El respaldo y los contadores cambian solos (USB conectada o retirada): se refrescan.
+  useEffect(() => {
+    const t = setInterval(() => void recargar().catch(() => {}), 5000)
+    return () => clearInterval(t)
+  }, [recargar])
+
   // "Salir de la app" pide un segundo toque en menos de 3 s.
   useEffect(() => {
     if (!confirmarSalida) return
@@ -108,6 +114,28 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
     }
   }
 
+  async function prepararRespaldo(): Promise<void> {
+    if (exportando) return
+    setExportando(true)
+    setMensaje(null)
+    try {
+      const r = await window.totem.admin.prepararRespaldo()
+      setMensaje(
+        {
+          ok: 'USB de respaldo lista. Desde ahora cada registro se copia ahí.',
+          cancelado: 'Cancelado.',
+          'unidad-del-sistema': 'Esa es la unidad del tótem. Elige la USB.',
+          error: 'No se pudo preparar la USB. Revisa que no esté protegida.'
+        }[r]
+      )
+      await recargar()
+    } catch {
+      setMensaje('No se pudo preparar la USB.')
+    } finally {
+      setExportando(false)
+    }
+  }
+
   async function elegirId(id: TotemId): Promise<void> {
     await window.totem.admin.setTotemId(id)
     await recargar()
@@ -116,13 +144,22 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
   const avisos = [
     !estado.idConfirmado && 'ID sin confirmar: elige T1 o T2 para este tótem.',
     estado.pinDeFabrica && 'El PIN sigue siendo el de fábrica. Cámbialo.',
-    ...estado.qrPendiente.map((j) => `QR pendiente: ${juegos[j].nombre}.`)
+    estado.qrPendiente.length > 0 &&
+      `QR pendiente: ${estado.qrPendiente.map((t) => talentos[t].nombre).join(', ')}.`,
+    !estado.respaldo.unidad && 'Sin USB de respaldo: los registros solo están en este tótem.',
+    estado.respaldo.error && 'Falló la copia a la USB de respaldo.',
+    estado.fallosGuardado > 0 &&
+      `${estado.fallosGuardado} registro(s) no se pudieron guardar. Revisa el disco del tótem.`
   ].filter((a): a is string => Boolean(a))
 
   return (
     <div className="pantalla admin">
       <div className="admin__cabecera">
-        <h2 className="admin__titulo">Panel de administrador</h2>
+        <div>
+          <h2 className="admin__titulo">Panel de administrador</h2>
+          {/* Sin internet el reloj no se sincroniza: revisar que sea correcto. */}
+          <p className="admin__reloj">Fecha y hora del tótem: {fechaHora(estado.ahora)}</p>
+        </div>
         <span className="admin__id">{estado.totemId}</span>
       </div>
 
@@ -142,11 +179,11 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
             <Cifra key={t} etiqueta={talentos[t].nombre} valor={estado.porTalento[t]} />
           ))}
         </div>
-        <div className="admin__cifras">
-          {(['simulador', 'pera'] as const).map((j) => (
-            <Cifra key={j} etiqueta={juegos[j].nombre} valor={estado.porJuego[j]} />
-          ))}
-        </div>
+        <p className="admin__reloj">
+          {(['simulador', 'pera'] as const)
+            .map((j) => `${juegos[j].nombre}: ${estado.porJuego[j]}`)
+            .join(' · ')}
+        </p>
       </section>
 
       <section className="admin__seccion">
@@ -166,6 +203,22 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
               {id}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="admin__seccion">
+        <p className="admin__subtitulo">Respaldo en USB</p>
+        <div className="admin__fila" style={{ alignItems: 'center' }}>
+          <p className="admin__mensaje" style={{ minHeight: 0, flex: 1 }}>
+            {textoRespaldo(estado.respaldo)}
+          </p>
+          <button
+            className="boton boton--secundario"
+            aria-disabled={exportando}
+            onClick={prepararRespaldo}
+          >
+            Preparar USB
+          </button>
         </div>
       </section>
 
@@ -203,6 +256,23 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
       </div>
     </div>
   )
+}
+
+/** "2026-10-18T10:15:00-06:00" → "18/10/2026 10:15" (la hora tal como la tiene el tótem). */
+function fechaHora(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/.exec(iso)
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}` : iso
+}
+
+function textoRespaldo(r: EstadoRespaldo): string {
+  if (!r.unidad)
+    return 'No hay USB de respaldo. Conecta la USB con la carpeta TotemRespaldo o prepárala.'
+  if (r.error)
+    return `La USB ${r.unidad} falló (${r.error}). Revisa que no esté llena ni protegida.`
+  const excel = r.excelActualizado
+    ? ` · Excel de las ${fechaHora(r.excelActualizado).slice(11)}`
+    : ''
+  return `USB ${r.unidad} · ${r.enUsb} de ${r.registros} registros copiados${excel}`
 }
 
 function Cifra({ etiqueta, valor }: { etiqueta: string; valor: number }): React.JSX.Element {
