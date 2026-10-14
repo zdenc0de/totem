@@ -8,15 +8,18 @@ const resp = (s: string): Talento[] => s.split(' ') as Talento[]
 
 describe('calcularResultado: casos obligatorios (§6)', () => {
   it.each([
+    // Reflejo (V) va siempre al simulador, también cuando gana por desempate.
     ['A A A I V', 'A', 'simulador', false],
     ['I I I A V', 'I', 'pera', false],
     ['V V V A I', 'V', 'simulador', false],
-    ['A A I I V', 'V', 'pera', true],
+    ['A A I I V', 'V', 'simulador', true],
     ['V A A I I', 'V', 'simulador', true],
-    ['A V I I A', 'V', 'pera', true],
-    ['V V A A I', 'V', 'pera', true],
+    ['A V I I A', 'V', 'simulador', true],
+    ['V V A A I', 'V', 'simulador', true],
     ['V A V A I', 'V', 'simulador', true],
-    ['V V V V V', 'V', 'pera', false]
+    ['V V V V V', 'V', 'simulador', false],
+    ['I I V V A', 'V', 'simulador', true],
+    ['I I I I I', 'I', 'pera', false]
   ] as const)('%s → %s / %s', (respuestas, talento, juego, desempate) => {
     const r = calcularResultado(resp(respuestas), reglas)
     expect(r.talento).toBe(talento)
@@ -50,21 +53,20 @@ describe('calcularResultado: las 243 combinaciones', () => {
       porJuego[r.juego]++
       porTalento[r.talento]++
     }
-    expect(porJuego).toEqual({ simulador: 81, pera: 162 })
+    // Solo Impulsor va a la pera.
+    expect(porJuego).toEqual({ simulador: 192, pera: 51 })
     expect(porTalento).toEqual({ A: 51, I: 51, V: 141 })
   })
 })
 
 describe('calcularResultado: reglas desde config', () => {
-  it('usa el juego por talento y la regla de empate de la config', () => {
+  it('usa el juego por talento de la config', () => {
     const otras = {
-      juegoPorTalento: { A: 'pera', I: 'simulador' },
-      reflejoPorPregunta: ['pera', 'simulador', 'pera', 'simulador', 'simulador'],
-      empateReflejo: 'simulador'
+      juegoPorTalento: { A: 'pera', I: 'simulador', V: 'pera' }
     } satisfies typeof reglas
     expect(calcularResultado(resp('A A A I V'), otras).juego).toBe('pera')
-    expect(calcularResultado(resp('V V A A I'), otras).juego).toBe('simulador')
-    expect(calcularResultado(resp('V A V A I'), otras).juego).toBe('pera')
+    expect(calcularResultado(resp('I I I A V'), otras).juego).toBe('simulador')
+    expect(calcularResultado(resp('V V A A I'), otras).juego).toBe('pera')
   })
 })
 

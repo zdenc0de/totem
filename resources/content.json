@@ -2,36 +2,37 @@
   "talentos": {
     "A": {
       "nombre": "Acelerador",
-      "frase": "Decides rápido y conviertes las ideas en acción"
+      "frase": "Decides rápido y conviertes las ideas en acción",
+      "qrUrl": "https://totem-talento.vercel.app/acelerador",
+      "qrImage": null
     },
     "I": {
       "nombre": "Impulsor",
-      "frase": "Tu constancia mueve los proyectos que otros sueltan"
+      "frase": "Tu constancia mueve los proyectos que otros sueltan",
+      "qrUrl": "https://totem-talento.vercel.app/impulsor",
+      "qrImage": null
     },
     "V": {
       "nombre": "Reflejo",
-      "frase": "Lees el momento y respondes antes que nadie"
+      "frase": "Lees el momento y respondes antes que nadie",
+      "qrUrl": "https://totem-talento.vercel.app/reflejo",
+      "qrImage": null
     }
   },
   "juegos": {
     "simulador": {
-      "nombre": "Simulador de carreras",
-      "qrUrl": "PENDIENTE",
-      "qrImage": null
+      "nombre": "Simulador de carreras"
     },
     "pera": {
-      "nombre": "Pera de box",
-      "qrUrl": "PENDIENTE",
-      "qrImage": null
+      "nombre": "Pera de box"
     }
   },
   "reglas": {
     "juegoPorTalento": {
       "A": "simulador",
-      "I": "pera"
-    },
-    "reflejoPorPregunta": ["simulador", "pera", "simulador", "pera", "pera"],
-    "empateReflejo": "pera"
+      "I": "pera",
+      "V": "simulador"
+    }
   },
   "tiempos": {
     "inactividadSeg": 45,

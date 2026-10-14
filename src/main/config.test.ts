@@ -11,7 +11,10 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }))
 
 const conFrase = (frase: string): Contenido => ({
   ...CONTENIDO_POR_DEFECTO,
-  talentos: { ...CONTENIDO_POR_DEFECTO.talentos, A: { nombre: 'Acelerador', frase } }
+  talentos: {
+    ...CONTENIDO_POR_DEFECTO.talentos,
+    A: { ...CONTENIDO_POR_DEFECTO.talentos.A, frase }
+  }
 })
 
 function escribir(nombre: string, valor: unknown): string {
@@ -48,29 +51,38 @@ describe('cargarContenido', () => {
 })
 
 describe('generarQrs', () => {
-  const conJuegos = (juegos: Contenido['juegos']): Contenido => ({
-    ...CONTENIDO_POR_DEFECTO,
-    juegos
-  })
+  type Qr = Pick<Contenido['talentos']['A'], 'qrUrl' | 'qrImage'>
+  const conQrs = (qrs: Record<'A' | 'I' | 'V', Qr>): Contenido => {
+    const t = CONTENIDO_POR_DEFECTO.talentos
+    return {
+      ...CONTENIDO_POR_DEFECTO,
+      talentos: { A: { ...t.A, ...qrs.A }, I: { ...t.I, ...qrs.I }, V: { ...t.V, ...qrs.V } }
+    }
+  }
 
-  it('genera un PNG desde la URL y deja null lo pendiente', async () => {
-    const contenido = conJuegos({
-      simulador: { nombre: 'Simulador', qrUrl: 'https://ejemplo.com/simulador.jpg', qrImage: null },
-      pera: { nombre: 'Pera', qrUrl: 'PENDIENTE', qrImage: null }
+  it('genera un PNG por talento desde la URL y deja null lo pendiente', async () => {
+    const contenido = conQrs({
+      A: { qrUrl: 'https://ejemplo.com/acelerador', qrImage: null },
+      I: { qrUrl: 'PENDIENTE', qrImage: null },
+      V: { qrUrl: 'https://ejemplo.com/reflejo', qrImage: null }
     })
     const qr = await generarQrs({ contenido, dirBase: null })
-    expect(qr.simulador).toMatch(/^data:image\/png;base64,/)
-    expect(qr.pera).toBeNull()
+    expect(qr.A).toMatch(/^data:image\/png;base64,/)
+    expect(qr.V).toMatch(/^data:image\/png;base64,/)
+    expect(qr.A).not.toBe(qr.V)
+    expect(qr.I).toBeNull()
   })
 
   it('una imagen de QR tiene prioridad sobre la URL y se resuelve junto al content.json', async () => {
-    writeFileSync(join(dir, 'pera.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]))
-    const contenido = conJuegos({
-      simulador: { nombre: 'Simulador', qrUrl: 'javascript:alert(1)', qrImage: null },
-      pera: { nombre: 'Pera', qrUrl: 'https://ejemplo.com/pera.jpg', qrImage: 'pera.png' }
+    writeFileSync(join(dir, 'impulsor.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]))
+    const contenido = conQrs({
+      A: { qrUrl: 'javascript:alert(1)', qrImage: null },
+      I: { qrUrl: 'https://ejemplo.com/impulsor', qrImage: 'impulsor.png' },
+      V: { qrUrl: 'PENDIENTE', qrImage: null }
     })
     const qr = await generarQrs({ contenido, dirBase: dir })
-    expect(qr.pera).toBe('data:image/png;base64,iVBORw==')
-    expect(qr.simulador).toBeNull()
+    expect(qr.I).toBe('data:image/png;base64,iVBORw==')
+    expect(qr.A).toBeNull()
+    expect(qr.V).toBeNull()
   })
 })

@@ -36,7 +36,7 @@ export function Boleto({ state, dispatch }: ScreenProps): React.JSX.Element {
           nombre={primerNombre(state.registro?.nombre ?? '')}
           talento={talento.nombre}
           frase={talento.frase}
-          qr={qr[resultado.juego]}
+          qr={qr[resultado.talento]}
           juego={showGameOnTicket ? juegos[resultado.juego].nombre : undefined}
         />
       </motion.div>

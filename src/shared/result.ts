@@ -4,11 +4,9 @@ import type { Juego, Talento } from './types'
 export const TALENTOS: readonly Talento[] = ['A', 'I', 'V']
 export const NUM_PREGUNTAS = 5
 
+/** Cada talento lleva siempre al mismo juego (Reflejo → simulador, confirmado por el cliente). */
 export type Reglas = {
-  juegoPorTalento: { A: Juego; I: Juego }
-  /** Juego al que cuenta cada pregunta respondida con V. Índice 0 = pregunta 1. */
-  reflejoPorPregunta: Juego[]
-  empateReflejo: Juego
+  juegoPorTalento: Record<Talento, Juego>
 }
 
 export type Resultado = {
@@ -36,16 +34,5 @@ export function calcularResultado(respuestas: Talento[], reglas: Reglas): Result
   const desempate = lideres.length > 1
   const talento = desempate ? 'V' : lideres[0]
 
-  const juego = talento === 'V' ? juegoReflejo(respuestas, reglas) : reglas.juegoPorTalento[talento]
-  return { conteo, talento, juego, desempate }
-}
-
-/** Gana el juego con más preguntas respondidas con V; empate → `empateReflejo`. */
-function juegoReflejo(respuestas: Talento[], reglas: Reglas): Juego {
-  const votos: Record<Juego, number> = { simulador: 0, pera: 0 }
-  respuestas.forEach((r, i) => {
-    if (r === 'V') votos[reglas.reflejoPorPregunta[i]]++
-  })
-  if (votos.simulador === votos.pera) return reglas.empateReflejo
-  return votos.simulador > votos.pera ? 'simulador' : 'pera'
+  return { conteo, talento, juego: reglas.juegoPorTalento[talento], desempate }
 }

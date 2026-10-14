@@ -4,7 +4,8 @@ import { existsSync, readFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join } from 'path'
 import QRCode from 'qrcode'
 import { CONTENIDO_POR_DEFECTO, contenidoSchema, type Contenido } from '@shared/content'
-import type { Juego } from '@shared/types'
+import type { Talento } from '@shared/types'
+import { TALENTOS } from '@shared/result'
 import { sinLog, type Logger } from './storage'
 
 export type ContenidoCargado = {
@@ -48,32 +49,32 @@ const MIME: Record<string, string> = {
 }
 
 /**
- * Un data URL por juego: la imagen de `qrImage` si existe o un QR generado localmente
+ * Un data URL por talento: la imagen de `qrImage` si existe o un QR generado localmente
  * desde `qrUrl` (sin red). `null` si no hay ninguno válido (el boleto dice "QR pendiente").
  */
 export async function generarQrs(
   { contenido, dirBase }: ContenidoCargado,
   log: Logger = sinLog
-): Promise<Record<Juego, string | null>> {
-  const qr: Record<Juego, string | null> = { simulador: null, pera: null }
-  for (const juego of ['simulador', 'pera'] as const) {
-    const { qrUrl, qrImage } = contenido.juegos[juego]
+): Promise<Record<Talento, string | null>> {
+  const qr: Record<Talento, string | null> = { A: null, I: null, V: null }
+  for (const talento of TALENTOS) {
+    const { qrUrl, qrImage } = contenido.talentos[talento]
     try {
       if (qrImage) {
-        qr[juego] = leerImagen(qrImage, dirBase)
+        qr[talento] = leerImagen(qrImage, dirBase)
       } else if (esUrlWeb(qrUrl)) {
         // Nivel Q (25 %). La tarjeta blanca del boleto completa la zona blanca alrededor del
         // margen de 2 módulos; 920 px es el doble del tamaño en pantalla (460 px).
-        qr[juego] = await QRCode.toDataURL(qrUrl, {
+        qr[talento] = await QRCode.toDataURL(qrUrl, {
           errorCorrectionLevel: 'Q',
           margin: 2,
           width: 920
         })
       }
     } catch (err) {
-      log.error('No se pudo preparar el QR', { juego, err: String(err) })
+      log.error('No se pudo preparar el QR', { talento, err: String(err) })
     }
-    if (!qr[juego]) log.warn('QR pendiente', { juego })
+    if (!qr[talento]) log.warn('QR pendiente', { talento })
   }
   return qr
 }
