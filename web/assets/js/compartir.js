@@ -5,7 +5,7 @@
 // Si el navegador no lo permite, se descarga la imagen y se explica cómo subirla.
 ;(() => {
   const talento = document.body.dataset.talento
-  const url = `/img/${talento}.jpg`
+  const url = `/assets/img/retos/${talento}.jpg`
   const nombreArchivo = `conaip-eliot-${talento}.jpg`
   const aviso = document.getElementById('aviso')
   const esIOS =

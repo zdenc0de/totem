@@ -1,0 +1,597 @@
+/* Páginas del QR: el participante ve su reto y lo guarda o lo comparte.
+   Misma identidad que las pantallas del tótem (src/renderer/styles): azul CONAIP plano, banda
+   blanca de logos que se deshace en píxeles (IDLE), trama de Eliot en la orilla (boleto),
+   Poppins y botones Yellow X. Las medidas son las del artboard de 1080 px del tótem a escala de
+   celular (~0.36); en pantallas anchas, a ~0.5. */
+@font-face {
+  font-family: 'Poppins';
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/poppins-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/poppins-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-weight: 900;
+  font-display: swap;
+  src: url('/assets/fonts/poppins-latin-900-normal.woff2') format('woff2');
+}
+
+:root {
+  /* Colores de las dos marcas (src/renderer/styles/tokens.css), planos. */
+  --azul: #0c53a2;
+  --rojo: #ac141c;
+  --amarillo-x: #ffed00;
+  --blanco: #ffffff;
+  --negro: #000000;
+  --negro-20: #d1d3d4;
+
+  --fuente: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+
+  /* En el tótem: celda de 44 px, banda de 200, gutter de 72, botones de 112 y radio de 28. */
+  --paso: 16px;
+  --banda-alto: 72px;
+  --gutter: 20px;
+  --boton-alto: 56px;
+  --radio: 12px;
+  --trama-alto: 264px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+h1,
+p,
+ul {
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--fuente);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--blanco);
+  /* Trama de Eliot desde la orilla derecha, justo debajo de la banda de logos. */
+  background: var(--azul) url('/assets/img/pixeles/trama.svg') no-repeat right 0 top
+    var(--banda-alto) / auto var(--trama-alto);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--amarillo-x);
+  outline-offset: 3px;
+}
+
+/* Banda de logos, como la de IDLE: su orilla se deshace en píxeles sobre el azul. */
+.banda {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: var(--banda-alto);
+  background: var(--blanco);
+}
+
+.banda::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: calc(var(--paso) * 3);
+  background: url('/assets/img/pixeles/banda-blanca.svg') repeat-x 0 0 / auto 100%;
+  pointer-events: none;
+}
+
+.banda__conaip {
+  width: auto;
+  height: 34px;
+}
+
+.banda__division {
+  width: 2px;
+  height: 40px;
+  background: var(--negro-20);
+}
+
+.banda__eliot {
+  width: auto;
+  height: 46px;
+}
+
+/* Botones del tótem: Yellow X con texto negro y, de secundario, contorno blanco. */
+.boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--boton-alto);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radio);
+  font: inherit;
+  /* Que "Compartir en mi historia" quepa en una línea desde 320 px. */
+  font-size: clamp(15px, 4.7vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 80ms ease-out,
+    opacity 80ms ease-out;
+}
+
+/* Feedback inmediato al tocar, como en el tótem. */
+.boton:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+.boton svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.boton--principal {
+  background: var(--amarillo-x);
+  color: var(--negro);
+}
+
+.boton--secundario {
+  background: transparent;
+  color: var(--blanco);
+  box-shadow: inset 0 0 0 2px var(--blanco);
+}
+
+/* Pie con la banda roja inclinada de @CONAIP_MX, como en el boleto. */
+.pie {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 32px 0 max(32px, env(safe-area-inset-bottom));
+}
+
+.pie__texto {
+  font-size: 15px;
+}
+
+.red {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  /* Lo que sobresale la esquina inclinada (24 px × tan 24°). */
+  margin-left: 11px;
+  padding: 0 28px;
+  border-radius: 6px;
+  background: var(--rojo);
+  color: var(--blanco);
+  text-decoration: none;
+  transform: skewX(-24deg);
+}
+
+.red__contenido {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transform: skewX(24deg);
+}
+
+.red svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Página del reto (/acelerador, /impulsor, /reflejo) */
+.reto {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(480px + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 56px var(--gutter) 0;
+}
+
+/* Deja libre la orilla de la trama. */
+.reto__texto {
+  padding-right: 56px;
+}
+
+.reto__intro {
+  font-size: 18px;
+}
+
+/* El juego se revela aquí (el boleto dice "para descubrir tu juego"): mismo desfase de color que
+   el nombre del talento en el boleto. Al entrar, dos copias se separan y se asientan como una
+   señal que se sintoniza. */
+.reto__juego {
+  position: relative;
+  isolation: isolate;
+  margin-top: 6px;
+  font-size: clamp(36px, 11vw, 46px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  text-shadow:
+    -3px 2px 0 var(--rojo),
+    3px -2px 0 var(--amarillo-x);
+}
+
+.reto__juego::before,
+.reto__juego::after {
+  content: attr(data-texto);
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  text-shadow: none;
+  opacity: 0;
+  animation: 600ms steps(1, end) 450ms both;
+}
+
+.reto__juego::before {
+  color: var(--rojo);
+  animation-name: sintonia-rojo;
+}
+
+.reto__juego::after {
+  color: var(--amarillo-x);
+  animation-name: sintonia-amarillo;
+}
+
+.reto__boleto {
+  width: 100%;
+  height: auto;
+  margin-top: 28px;
+  /* Se puede mantener presionada para guardarla. */
+  -webkit-touch-callout: default;
+  animation: boleto-entrada 650ms cubic-bezier(0.22, 1.25, 0.36, 1) both;
+}
+
+/* En el celular los botones se quedan al pie de la pantalla mientras se ve el boleto. */
+.reto__acciones {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px calc(var(--gutter) * -1) 0;
+  padding: 12px var(--gutter) max(16px, env(safe-area-inset-bottom));
+  background: var(--azul);
+}
+
+.reto__aviso {
+  margin-bottom: 2px;
+  font-size: 15px;
+}
+
+.reto__aviso:empty {
+  display: none;
+}
+
+/* Página de inicio (para revisar las tres) */
+.indice {
+  max-width: calc(480px + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 56px var(--gutter) 0;
+}
+
+.indice__titulo {
+  padding-right: 56px;
+  font-size: clamp(44px, 13vw, 60px);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.indice__bajada {
+  margin-top: 16px;
+  text-wrap: balance;
+  padding-right: 56px;
+  font-size: 18px;
+}
+
+.talones {
+  display: grid;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 0;
+  list-style: none;
+}
+
+/* Talón de boleto: papel blanco con borde Yellow X, una muesca arriba y otra abajo en la línea
+   perforada. Las muescas se recortan con una máscara y un aro amarillo les dibuja el borde. */
+.talon {
+  --corte: 100px;
+  --muesca: 12px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--corte) 1fr;
+  align-items: center;
+  border: 4px solid var(--amarillo-x);
+  border-radius: 16px;
+  background: var(--blanco);
+  color: var(--negro);
+  text-decoration: none;
+  -webkit-mask:
+    radial-gradient(circle var(--muesca) at var(--corte) 0, #0000 98%, #000) top / 100% 51%
+      no-repeat,
+    radial-gradient(circle var(--muesca) at var(--corte) 100%, #0000 98%, #000) bottom / 100% 51%
+      no-repeat;
+  mask:
+    radial-gradient(circle var(--muesca) at var(--corte) 0, #0000 98%, #000) top / 100% 51%
+      no-repeat,
+    radial-gradient(circle var(--muesca) at var(--corte) 100%, #0000 98%, #000) bottom / 100% 51%
+      no-repeat;
+  transition: transform 80ms ease-out;
+}
+
+.talon::before,
+.talon::after {
+  content: '';
+  position: absolute;
+  /* Centrado en la orilla del borde (el origen de `left`/`top` está dentro del borde). */
+  left: calc(var(--corte) - 4px - var(--muesca) - 4px);
+  width: calc((var(--muesca) + 4px) * 2);
+  height: calc((var(--muesca) + 4px) * 2);
+  border: 4px solid var(--amarillo-x);
+  border-radius: 50%;
+}
+
+.talon::before {
+  top: calc(-4px - var(--muesca) - 4px);
+}
+
+.talon::after {
+  bottom: calc(-4px - var(--muesca) - 4px);
+}
+
+.talon:active {
+  transform: scale(0.97);
+}
+
+/* La máscara recorta el contorno de enfoque por fuera: va por dentro. */
+.talon:focus-visible {
+  outline: 3px solid var(--azul);
+  outline-offset: -10px;
+}
+
+.talon__miniatura {
+  width: 64px;
+  height: auto;
+  margin: 12px auto;
+}
+
+.talon__texto {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+  padding: 16px 20px;
+  border-left: 2px dashed var(--negro-20);
+}
+
+/* Como el nombre del talento en el boleto: azul CONAIP con el desfase rojo y amarillo. */
+.talon__talento {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--azul);
+  text-shadow:
+    -2px 2px 0 var(--rojo),
+    2px -1px 0 var(--amarillo-x);
+}
+
+.talon__juego {
+  margin-top: 4px;
+  font-size: 16px;
+}
+
+@keyframes boleto-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.94);
+  }
+}
+
+/* Mismo movimiento que .ticket__talento del tótem, a la escala del titular. */
+@keyframes sintonia-rojo {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-12px, 2px);
+  }
+  35% {
+    transform: translate(7px, 1px);
+  }
+  55% {
+    transform: translate(-5px, 2px);
+  }
+  75% {
+    transform: translate(2px, 1px);
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes sintonia-amarillo {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  15% {
+    opacity: 1;
+    transform: translate(10px, -2px);
+  }
+  35% {
+    transform: translate(-8px, -1px);
+  }
+  55% {
+    transform: translate(4px, -1px);
+  }
+  75% {
+    transform: translate(-2px, -1px);
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reto__boleto,
+  .reto__juego::before,
+  .reto__juego::after {
+    animation: none;
+  }
+}
+
+/* Pantallas anchas (computadora, tableta horizontal): dos columnas, el boleto a la izquierda. */
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+  :root {
+    --paso: 22px;
+    --banda-alto: 96px;
+    --gutter: 48px;
+    --trama-alto: 484px;
+  }
+
+  .banda {
+    gap: 28px;
+  }
+
+  .banda__conaip {
+    height: 46px;
+  }
+
+  .banda__division {
+    height: 56px;
+  }
+
+  .banda__eliot {
+    height: 62px;
+  }
+
+  .reto,
+  .indice {
+    display: grid;
+    column-gap: 72px;
+    max-width: calc(1080px + var(--gutter) * 2);
+    padding-top: 72px;
+  }
+
+  .reto {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto auto 1fr;
+    grid-template-areas:
+      'boleto .'
+      'boleto texto'
+      'boleto acciones'
+      'boleto pie'
+      'boleto .';
+  }
+
+  .reto__texto {
+    grid-area: texto;
+    padding-right: 96px;
+  }
+
+  .reto__intro {
+    font-size: 24px;
+  }
+
+  .reto__juego {
+    margin-top: 8px;
+    font-size: 72px;
+    text-shadow:
+      -4px 3px 0 var(--rojo),
+      4px -2px 0 var(--amarillo-x);
+  }
+
+  .reto__boleto {
+    grid-area: boleto;
+    width: auto;
+    height: min(100svh - var(--banda-alto) - 72px - 48px, 860px);
+    margin: 0 0 48px;
+  }
+
+  .reto__acciones {
+    grid-area: acciones;
+    position: static;
+    max-width: 420px;
+    margin: 40px 0 0;
+    padding: 0;
+    background: none;
+  }
+
+  .reto .pie {
+    grid-area: pie;
+  }
+
+  .indice {
+    grid-template-columns: 1fr minmax(0, 480px);
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+  }
+
+  .indice__titulo {
+    font-size: 96px;
+  }
+
+  .indice__bajada {
+    padding-right: 0;
+    font-size: 24px;
+  }
+
+  .talon__talento {
+    font-size: 32px;
+  }
+
+  .talon__juego {
+    font-size: 18px;
+  }
+
+  .talones {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin-top: 0;
+  }
+
+  .indice .pie {
+    grid-column: 1;
+  }
+}

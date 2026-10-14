@@ -71,7 +71,12 @@ Cada QR del boleto abre la página de su talento, con la imagen de su reto y dos
   - <https://totem-talento.vercel.app/impulsor>
   - <https://totem-talento.vercel.app/reflejo>
 - HTML/CSS/JS estático, sin frameworks ni recursos de terceros. Fuentes locales.
-- `img/{talento}.jpg`: 1080×1920 (tamaño de historia), calidad 85; es el archivo que se guarda o comparte. `img/{talento}.webp`: la misma imagen, más ligera, para mostrarla en la página. Ambas salen de `assets/tickets/tipoJuego/`.
+- Misma identidad que las pantallas del tótem: azul CONAIP plano, banda de logos que se deshace en píxeles, trama de Eliot, Poppins y botones Yellow X. Medidas del artboard de 1080 px a escala de celular; en pantallas anchas, dos columnas.
+- Estructura: en la raíz solo las páginas (sus nombres son las URLs de los QR: `index.html`, `acelerador.html`, `impulsor.html`, `reflejo.html`); todo lo demás en `assets/`:
+  - `css/estilos.css`, `js/compartir.js` y `fonts/` (Poppins 400, 700 y 900).
+  - `img/logos/`: CONAIP y Eliot.
+  - `img/retos/{talento}.jpg`: 1080×1920 (tamaño de historia), con fondo azul CONAIP en lugar del marco blanco; es el archivo que se guarda o comparte. `{talento}.webp`: el boleto sin el marco blanco (transparente por fuera, recortado a 1032×1859) para mostrarlo sobre el azul de la página. `{talento}-mini.webp`: lo mismo a 270×486, para la página de inicio. Salen de `assets/tickets/tipoJuego/`.
+  - `img/pixeles/`: la orilla de la banda de logos y la trama de Eliot (SVG).
 - Las tres páginas son iguales salvo el talento; si se cambia una, cambiar las tres.
 - Publicar: `cd web && npx vercel deploy --prod`. Si cambian las URLs, actualizar `talentos.{A,I,V}.qrUrl` en `content.json` (no hace falta reinstalar, ver arriba).
 - No se publica dentro de la app del tótem (`electron-builder.yml` excluye `web/`).

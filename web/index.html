@@ -3,24 +3,101 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#083a73" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="robots" content="noindex" />
     <title>Quiz de Talento · CONAIP × Eliot Awards</title>
-    <link rel="stylesheet" href="/estilos.css" />
+    <link rel="stylesheet" href="/assets/css/estilos.css" />
   </head>
   <!-- Página de revisión: los QR del tótem llevan directo a /acelerador, /impulsor o /reflejo. -->
   <body>
-    <main class="pagina">
-      <div class="logos">
-        <img src="/img/conaip.svg" alt="CONAIP" />
-        <img src="/img/eliot.svg" alt="Eliot Awards" />
-      </div>
-      <h1 class="titulo">Quiz de Talento</h1>
-      <ul class="lista">
-        <li><a class="boton boton--principal" href="/acelerador">Acelerador · Simulador</a></li>
-        <li><a class="boton boton--principal" href="/impulsor">Impulsor · Pera de box</a></li>
-        <li><a class="boton boton--principal" href="/reflejo">Reflejo · Simulador</a></li>
+    <header class="banda">
+      <img
+        class="banda__conaip"
+        src="/assets/img/logos/conaip.svg"
+        width="858"
+        height="196"
+        alt="CONAIP"
+      />
+      <span class="banda__division" aria-hidden="true"></span>
+      <img
+        class="banda__eliot"
+        src="/assets/img/logos/eliot.svg"
+        width="386"
+        height="232"
+        alt="Eliot Awards"
+      />
+    </header>
+
+    <main class="indice">
+      <h1 class="indice__titulo">Quiz de Talento</h1>
+      <p class="indice__bajada">Cada QR del boleto abre la página de su talento.</p>
+
+      <ul class="talones">
+        <li>
+          <a class="talon" href="/acelerador">
+            <img
+              class="talon__miniatura"
+              src="/assets/img/retos/acelerador-mini.webp"
+              width="270"
+              height="486"
+              alt=""
+            />
+            <span class="talon__texto">
+              <span class="talon__talento">Acelerador</span>
+              <span class="talon__juego">Simulador de carreras</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="talon" href="/impulsor">
+            <img
+              class="talon__miniatura"
+              src="/assets/img/retos/impulsor-mini.webp"
+              width="270"
+              height="486"
+              alt=""
+            />
+            <span class="talon__texto">
+              <span class="talon__talento">Impulsor</span>
+              <span class="talon__juego">Pera de box</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="talon" href="/reflejo">
+            <img
+              class="talon__miniatura"
+              src="/assets/img/retos/reflejo-mini.webp"
+              width="270"
+              height="486"
+              alt=""
+            />
+            <span class="talon__texto">
+              <span class="talon__talento">Reflejo</span>
+              <span class="talon__juego">Simulador de carreras</span>
+            </span>
+          </a>
+        </li>
       </ul>
+
+      <div class="pie">
+        <a class="red" href="https://www.instagram.com/conaip_mx/">
+          <span class="red__contenido">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+            </svg>
+            @CONAIP_MX
+          </span>
+        </a>
+      </div>
     </main>
   </body>
 </html>
