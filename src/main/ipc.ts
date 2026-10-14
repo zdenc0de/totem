@@ -2,22 +2,32 @@
 // después de verificar el PIN.
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { IPC, type EstadoAdmin, type RespuestaGuardar, type ResultadoExportar } from '@shared/ipc'
+import {
+  IPC,
+  type EstadoAdmin,
+  type RespuestaGuardar,
+  type ResultadoExportar,
+  type ResultadoPrepararRespaldo
+} from '@shared/ipc'
 import type { ConfigRenderer, Contenido } from '@shared/content'
-import type { Juego } from '@shared/types'
+import type { Talento } from '@shared/types'
+import { TALENTOS } from '@shared/result'
 import { normalizarEmail } from '@shared/validation'
+import { isoLocal } from '@shared/fecha'
 import { log } from './log'
 import { armarRegistro } from './registro'
 import { esPinValido, hashPin, verificarPin } from './pin'
 import type { Storage } from './storage'
 import type { SettingsStore } from './settings'
 import { escribirExport, nombreExport, tablaExport } from './export'
+import type { Respaldo } from './respaldo'
 
 export type Dependencias = {
   storage: Storage
   settings: SettingsStore
+  respaldo: Respaldo
   contenido: Contenido
-  qr: Record<Juego, string | null>
+  qr: Record<Talento, string | null>
   /** Diálogo para elegir la carpeta de exportación (la USB); `null` si se cancela. */
   elegirCarpeta: () => Promise<string | null>
   salir: () => void
@@ -30,7 +40,7 @@ const ESPERA_MS = 30_000
 export function registrarIpc(deps: Dependencias): {
   bloquearAdmin: () => void
 } {
-  const { storage, settings, contenido, qr, elegirCarpeta, salir } = deps
+  const { storage, settings, respaldo, contenido, qr, elegirCarpeta, salir } = deps
   let desbloqueado = false
   let fallos = 0
   let esperarHasta = 0
@@ -76,8 +86,11 @@ export function registrarIpc(deps: Dependencias): {
       return { guardado: false, resultado }
     }
     const guardado = storage.guardar(registro)
-    if (guardado)
+    if (guardado) {
       log.info('Registro guardado', { talento: resultado.talento, juego: resultado.juego })
+      // La línea en la USB se escribe aquí mismo (antes del primer await); el Excel, después.
+      void respaldo.sincronizar()
+    }
     return { guardado, resultado }
   })
 
@@ -120,7 +133,10 @@ export function registrarIpc(deps: Dependencias): {
         totemId: s.totemId,
         idConfirmado: s.idConfirmado,
         pinDeFabrica: s.pinHash === null,
-        qrPendiente: (['simulador', 'pera'] as const).filter((j) => !qr[j])
+        qrPendiente: TALENTOS.filter((t) => !qr[t]),
+        respaldo: respaldo.estado(),
+        fallosGuardado: storage.fallos(),
+        ahora: isoLocal(new Date())
       }
     })
   )
@@ -141,6 +157,8 @@ export function registrarIpc(deps: Dependencias): {
       if (id !== 'T1' && id !== 'T2') return false
       settings.guardar({ totemId: id, idConfirmado: true })
       log.info('ID de tótem configurado', { totemId: id })
+      // El archivo de la USB lleva el ID en el nombre: se crea el del ID nuevo.
+      void respaldo.sincronizar()
       return true
     })
   )
@@ -162,6 +180,24 @@ export function registrarIpc(deps: Dependencias): {
       }
     })
   )
+
+  ipcMain.handle(
+    IPC.adminPrepararRespaldo,
+    soloAdmin(IPC.adminPrepararRespaldo, async (): Promise<ResultadoPrepararRespaldo> => {
+      const carpeta = await elegirCarpeta()
+      if (!carpeta) return 'cancelado'
+      const r = respaldo.preparar(carpeta)
+      if (r === 'ok') await respaldo.sincronizar()
+      return r
+    })
+  )
+
+  // Público y sin datos personales: solo si el staff debe revisar el panel (sin USB de respaldo,
+  // la USB falla o un registro no se pudo guardar).
+  ipcMain.handle(IPC.alertaSistema, (): boolean => {
+    const r = respaldo.estado()
+    return !r.unidad || r.error !== null || storage.fallos() > 0
+  })
 
   ipcMain.handle(IPC.adminSalir, soloAdmin(IPC.adminSalir, salir))
 

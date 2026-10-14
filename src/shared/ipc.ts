@@ -13,7 +13,9 @@ export const IPC = {
   adminCambiarPin: 'admin:cambiarPin',
   adminSetTotemId: 'admin:setTotemId',
   adminExportar: 'admin:exportar',
-  adminSalir: 'admin:salir'
+  adminPrepararRespaldo: 'admin:prepararRespaldo',
+  adminSalir: 'admin:salir',
+  alertaSistema: 'sistema:alerta'
 } as const
 
 export type Duplicados = { email: boolean; telefono: boolean }
@@ -30,6 +32,19 @@ export type RespuestaGuardar = { guardado: boolean; resultado: Resultado | null 
 export type ResultadoExportar =
   { ok: true; total: number; archivos: string[] } | { ok: false; motivo: 'cancelado' | 'error' }
 
+/** Respaldo en la USB fija. `unidad` es null si no hay USB con la carpeta TotemRespaldo. */
+export type EstadoRespaldo = {
+  unidad: string | null
+  /** Código del último error al escribir en la USB (p. ej. ENOSPC); null si va bien. */
+  error: string | null
+  registros: number
+  enUsb: number
+  /** Hora local de la última vez que se regeneró el Excel en la USB. */
+  excelActualizado: string | null
+}
+
+export type ResultadoPrepararRespaldo = 'ok' | 'cancelado' | 'unidad-del-sistema' | 'error'
+
 export type EstadoAdmin = {
   total: number
   porTalento: Record<Talento, number>
@@ -37,5 +52,10 @@ export type EstadoAdmin = {
   totemId: TotemId
   idConfirmado: boolean
   pinDeFabrica: boolean
-  qrPendiente: Juego[]
+  qrPendiente: Talento[]
+  respaldo: EstadoRespaldo
+  /** Registros que no se pudieron guardar en el disco desde que arrancó la app. */
+  fallosGuardado: number
+  /** Fecha y hora del tótem: sin internet no se sincronizan solas, hay que revisarlas. */
+  ahora: string
 }

@@ -6,6 +6,7 @@ import { autoRecuperar, bloquearAtajos, endurecerContenido, endurecerSesion } fr
 import { cargarContenido, generarQrs } from './config'
 import { crearStorage } from './storage'
 import { crearSettings } from './settings'
+import { crearRespaldo, raicesWindows } from './respaldo'
 import { registrarIpc } from './ipc'
 
 const devServerUrl = !app.isPackaged ? process.env['ELECTRON_RENDERER_URL'] : undefined
@@ -66,15 +67,30 @@ async function iniciar(): Promise<void> {
   const userData = app.getPath('userData')
   const dirData = join(userData, 'data')
   const cargado = cargarContenido([join(userData, 'content.json'), rutaContenidoEmpaquetado()], log)
+  const storage = crearStorage(dirData, log)
+  const settings = crearSettings(dirData, log)
+  const respaldo = crearRespaldo({
+    raices: raicesRespaldo,
+    raizSistema: process.env['SystemDrive'] ?? 'C:',
+    registros: storage.leerTodos,
+    totemId: () => settings.leer().totemId,
+    contenido: cargado.contenido,
+    log
+  })
   const ipc = registrarIpc({
-    storage: crearStorage(dirData, log),
-    settings: crearSettings(dirData, log),
+    storage,
+    settings,
+    respaldo,
     contenido: cargado.contenido,
     qr: await generarQrs(cargado, log),
     elegirCarpeta,
     salir
   })
   bloquearAdmin = ipc.bloquearAdmin
+
+  // Pone al día la USB aunque nadie se registre (p. ej. al reconectarla) y refresca el Excel.
+  void respaldo.sincronizar()
+  setInterval(() => void respaldo.sincronizar(), 15_000)
 
   // Arranque automático al iniciar sesión en Windows (§13). Solo en la app instalada.
   if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true })
@@ -96,6 +112,16 @@ async function elegirCarpeta(): Promise<string | null> {
     properties: ['openDirectory', 'createDirectory']
   })
   return r.canceled ? null : (r.filePaths[0] ?? null)
+}
+
+/**
+ * Unidades donde buscar la USB de respaldo. Solo en desarrollo, TOTEM_RESPALDO_RAICES (rutas
+ * separadas por ;) las sustituye para pruebas automáticas.
+ */
+function raicesRespaldo(): string[] {
+  const fijas = process.env['TOTEM_RESPALDO_RAICES']
+  if (esDev && fijas) return fijas.split(';').filter(Boolean)
+  return raicesWindows()
 }
 
 /** content.json empaquetado como extraResources; en desarrollo, el de resources/. */
