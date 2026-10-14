@@ -40,9 +40,9 @@ IDLE (atractor animado, "Toca para comenzar")
 - El registro se guarda **solo al completar el quiz**. Los abandonos no se guardan.
 
 ## 5. Contenido del quiz
-Tres talentos: `A` = Acelerador, `I` = Impacto, `V` = Versátil.
+Tres talentos, con los nombres de los bocetos del cliente (`assets/boletos_boceto/`): `A` = Acelerador, `I` = Impulsor, `V` = Reflejo. Los códigos `A`/`I`/`V` no cambian.
 
-| # | Pregunta | A · Acelerador | I · Impacto | V · Versátil |
+| # | Pregunta | A · Acelerador | I · Impulsor | V · Reflejo |
 |---|---|---|---|---|
 | 1 | ¿Dónde crees que se aprende más? | En los retos. | En la experiencia de todos los días. | Probando situaciones diferentes. |
 | 2 | ¿Cómo prefieres demostrar tu talento? | Con precisión y estrategia. | Con fuerza y determinación. | Resolviendo sobre la marcha. |
@@ -59,7 +59,7 @@ Entrada: arreglo de 5 respuestas, cada una `'A' | 'I' | 'V'` (índice 0 = pregun
 **Paso 1 — Talento**
 - Contar A, I y V.
 - Si un talento tiene el máximo **único** → ese talento.
-- Si hay empate en el máximo (solo puede ser 2-2-1) → **V (Versátil)**, con `desempate = true`.
+- Si hay empate en el máximo (solo puede ser 2-2-1) → **V (Reflejo)**, con `desempate = true`.
 
 **Paso 2 — Juego**
 - `A` → `simulador`
@@ -88,14 +88,15 @@ El mapeo de preguntas a juego, el juego por talento y la regla de empate van en 
 Agregar una prueba que recorra las 243 combinaciones y verifique: siempre hay resultado, el juego siempre es válido y la distribución es 81 simulador / 162 pera (A 51, I 51, V 141).
 
 ## 7. Boleto (pantalla de resultado)
-Referencia visual: boleto vertical con forma de ticket (muescas laterales), franja superior blanca con los logos de CONAIP y Eliot Awards, fondo azul con franjas diagonales rojas, borde dorado.
+Referencia visual: los bocetos del cliente (`assets/boletos_boceto/1.png`, `2.png` y `3.png`). Boleto vertical de papel blanco con reflejos diagonales en Black 10 %, borde Yellow X, pestaña arriba al centro y una muesca a cada lado. Las tramas de puntos de las esquinas del boceto se hacen con el mismo mosaico de píxeles de IDLE: azul CONAIP a la izquierda y amarillo Eliot a la derecha.
 Contenido:
-- `"{PrimerNombre},"` en su propia línea y debajo `"TU TIPO DE TALENTO ES"` (mayúsculas espaciadas, como el mockup del cliente)
-- Nombre del talento en grande (Poppins 900): **Talento Acelerador / Talento de Impacto / Talento Versátil**
-- Frase descriptiva del talento, desde config. Mientras el cliente confirma, se usan las frases de su mockup (`assets/inspiration/Conaip_x_Elliot.jpeg`).
-- QR del juego asignado, sobre una tarjeta blanca
-- Banda inferior: **"ESCANEA | para descubrir tu juego"**
-- El nombre del juego **no** se muestra en pantalla por defecto; se descubre con el QR. Dejarlo como opción en config: `showGameOnTicket: false`.
+- Logos de CONAIP × Eliot Awards arriba.
+- `"{PrimerNombre},"` en su propia línea y debajo `"tu tipo de talento es:"`.
+- Nombre del talento en grande y en mayúsculas (Poppins 900, azul CONAIP con el desfase de color del boceto en rojo CONAIP y Yellow X): **ACELERADOR / IMPULSOR / REFLEJO**
+- Frase descriptiva del talento, desde config (las de los bocetos).
+- QR del juego asignado en un marco rojo con el título "Escanea aquí" y, debajo, "para descubrir tu juego".
+- Banda roja inclinada con Instagram **@CONAIP_MX**.
+- El nombre del juego **no** se muestra en pantalla por defecto; se descubre con el QR. Dejarlo como opción en config: `showGameOnTicket: false` (si se activa, "para descubrir tu juego" cambia por "Tu juego: …").
 
 **Nombre:** usar el primer nombre, capitalizado ("zDENKO" → "Zdenko"). La tipografía se ajusta automáticamente para nombres largos (sin cortar ni desbordar). Probar con nombres de 25+ caracteres.
 
@@ -170,9 +171,9 @@ Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar text
 ```json
 {
   "talentos": {
-    "A": { "nombre": "Talento Acelerador", "frase": "Decides rápido y conviertes las ideas en acción." },
-    "I": { "nombre": "Talento de Impacto", "frase": "Tu constancia mueve los proyectos que otros sueltan." },
-    "V": { "nombre": "Talento Versátil",  "frase": "Lees el momento y respondes antes que nadie." }
+    "A": { "nombre": "Acelerador", "frase": "Decides rápido y conviertes las ideas en acción" },
+    "I": { "nombre": "Impulsor",   "frase": "Tu constancia mueve los proyectos que otros sueltan" },
+    "V": { "nombre": "Reflejo",    "frase": "Lees el momento y respondes antes que nadie" }
   },
   "juegos": {
     "simulador": { "nombre": "Simulador de carreras", "qrUrl": "PENDIENTE", "qrImage": null },
@@ -180,8 +181,8 @@ Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar text
   },
   "reglas": {
     "juegoPorTalento": { "A": "simulador", "I": "pera" },
-    "versatilPorPregunta": ["simulador", "pera", "simulador", "pera", "pera"],
-    "empateVersatil": "pera"
+    "reflejoPorPregunta": ["simulador", "pera", "simulador", "pera", "pera"],
+    "empateReflejo": "pera"
   },
   "tiempos": { "inactividadSeg": 45, "avisoInactividadSeg": 15, "boletoSeg": 60 },
   "showGameOnTicket": false,
@@ -209,7 +210,9 @@ Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar text
 - Colores (variables CSS en `:root`):
   - `--rojo: #AC141C` (POR CONFIRMAR: el manual también dice RGB 172, 20, 18)
   - `--azul: #0C53A2`
-  - Acentos del boleto de referencia: dorado/amarillo y blanco
+- **El boleto (y su pantalla) solo usa colores de las dos marcas**, planos, sin degradados, sombras ni transparencias:
+  - CONAIP: rojo `#AC141C`, azul `#0C53A2`, blanco y negro.
+  - Eliot (`assets/inspiration/Elliot_identidad_colores.jpeg`): Yellow X `#FFED00`, Yellow 1–6, negro, Black 80/60/40/20/10 % y blanco.
 - Tipografía: **Century Gothic** si el cliente entrega los archivos con licencia; si no, **Poppins** (local). Definir una `font-family` con fallback.
 - Botones de mínimo 96 px de alto, texto grande y legible a 1 m. Feedback inmediato al tocar (escala o color), aunque la acción tarde.
 - Assets en `src/renderer/assets/`: logos CONAIP y Eliot (PENDIENTES en alta), fondos y texturas.
@@ -256,13 +259,12 @@ resources/
 - Es imposible salir de la app sin el PIN (probar Alt+Tab, Alt+F4, gestos de borde y toques múltiples).
 
 ## 18. Pendientes del cliente (usar placeholders mientras llegan)
-- Confirmar las frases de los 3 talentos (por ahora, las del mockup). El mockup usa otros nombres (El Acelerador, El Impulsor, El Reflejo); se mantienen los de este documento.
 - El mockup dice que "El Reflejo" (V) va siempre al simulador; la lógica del §6 lo reparte entre simulador y pera. Confirmar.
 - URLs (o PNGs de QR) de las fotos de los 2 juegos, y quién aloja las fotos
 - Aviso de privacidad: menciona app móvil, CURP, fotografías y cámara, que el tótem no usa; falta la fecha de "Última actualización"
 - Logos en alta, fondos y diseños finales
 - Archivos y licencia de Century Gothic; aclarar el RGB del rojo
-- Confirmar: empate de votos versátiles → pera; ¿se elimina la pregunta bonus de CONAIP?
+- Confirmar: empate de votos de Reflejo → pera; ¿se elimina la pregunta bonus de CONAIP?
 - PIN de administrador (por ahora `1234`)
 
 ## 19. Despliegue en Windows (checklist, fuera del código)

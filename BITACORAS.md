@@ -551,3 +551,110 @@ Registro de cada cambio en el proyecto, del más antiguo al más reciente. Cada 
 
 ### Pendientes detectados
 - Todo lo que solo se prueba en Windows: el diálogo de la USB encima de la ventana kiosco, el arranque automático, los gestos de borde y el instalador mismo. Está en la checklist del README.
+
+---
+
+## 2026-10-13 — Boleto según los bocetos del cliente, con el mosaico de IDLE
+
+**Fase:** 3 — Interfaz final (boleto)
+
+### Referencia
+- `assets/boletos_boceto/1.png`, `2.png` y `3.png`: un boleto por talento (Impulsor, Acelerador y Reflejo). Papel blanco plateado con borde dorado, pestaña arriba y muescas a los lados, logos de CONAIP × Eliot, el talento en azul con desfase magenta y cian, marco rojo para el QR y banda de Instagram. Las esquinas llevan tramas de puntos: azul a la izquierda y amarillo a la derecha.
+
+### Talentos
+- Los nombres pasan a los de los bocetos: `A` = **Acelerador**, `I` = **Impulsor** y `V` = **Reflejo**. Los códigos no cambian, así que los registros guardados y la lógica del resultado siguen igual.
+- Las frases son las de los bocetos, sin punto final.
+- Cambia en `resources/content.json` y en `CONTENIDO_POR_DEFECTO`. El panel admin y la exportación (columna "Talento (nombre)") usan estos mismos nombres.
+
+### Boleto (`components/Ticket.tsx`)
+- **Forma (SVG):** papel blanco con un degradado plateado y reflejos en diagonal, borde dorado en degradado, pestaña al centro arriba y una muesca a cada lado a la altura del QR. La sombra va en el SVG (estático) y no en el contenedor, para que los píxeles que laten encima no obliguen a recalcular el filtro.
+- **Píxeles de las esquinas:** en vez de los puntos del boceto se usa el mosaico de IDLE: retícula de cuadros (24 px), trama que se encoge desde la esquina, píxeles sueltos donde se deshace, algunos parpadean y la trama late en onda. Cada lado lleva el color de la marca cuyo logo tiene arriba: azul CONAIP (con algún rojo) a la izquierda y amarillo Eliot (con algún negro) a la derecha.
+  - Los textos y los logos van sobre papel limpio: cerca de ellos la trama se encoge hasta desaparecer (44 px).
+  - El marco del QR y la banda de redes son opacos: la trama pasa por debajo, como en el boceto. Los cuadros que quedarían tapados por completo no se dibujan.
+  - 327 cuadros, 265 de ellos laten (IDLE tiene 229).
+- **Contenido:**
+  - "Zdenko," (se ajusta de 80 a 30 px) y "tu tipo de talento es:".
+  - El talento en mayúsculas, Poppins 900 en azul marino con el desfase magenta y cian del boceto. Se ajusta de 136 a 64 px: ACELERADOR queda en 98 px, IMPULSOR en 128 y REFLEJO en 136.
+  - La frase, el marco rojo "Escanea aquí" con el QR de 480 px en su tarjeta blanca, "para descubrir tu juego" y la banda inclinada con Instagram @CONAIP_MX (ícono en SVG local).
+  - "Escanea aquí" sustituye el "SCAN HERE" del boceto para que todo quede en español, y con "para descubrir tu juego" debajo forma una sola frase.
+  - Con `showGameOnTicket`, el texto de abajo cambia por "Tu juego: …".
+- **Entrada:** el boleto aterriza con el resorte de antes; los píxeles se arman de cada esquina hacia el centro y el nombre del talento "se sintoniza": dos copias magenta y cian brincan en pasos y se asientan (600 ms, solo `transform` y `opacity`). Respeta `prefers-reduced-motion`.
+- La posición de cada bloque vive en constantes de `Ticket.tsx`, porque los píxeles las necesitan para esquivar el contenido.
+
+### Píxeles compartidos
+- `components/Pixeles.tsx` (nuevo): el render de los cuadros que antes estaba en `Mosaico.tsx`. IDLE y el boleto arman cada uno su composición y comparten este render y la animación de `.mosaico` en `global.css`.
+- `components/aleatorio.ts` (nuevo): el PRNG con semilla fija (va aparte por la regla de fast refresh).
+
+**Archivos:**
+- Nuevos: `src/renderer/components/Pixeles.tsx` y `src/renderer/components/aleatorio.ts`.
+- Modificados:
+  - `src/renderer/components/{Ticket,Mosaico}.tsx` y `src/renderer/styles/{global,tokens}.css` (tokens `--azul-claro`, `--tinta`, `--cian` y `--magenta`).
+  - `resources/content.json`, `src/shared/content.ts`, `src/shared/result.ts` y `src/renderer/state/dev.ts` (comentarios).
+  - `src/main/{config,export}.test.ts` y `AGENTS.md` (§5, §6, §7, §12 y §18).
+
+### Verificación
+- 169 pruebas pasan; typecheck, lint y prettier limpios.
+- Capturas a 1080×1920 por CDP, con una segunda ventana de Electron conectada al servidor de Vite que ya estaba abierto:
+  - Los tres talentos: Acelerador con "Lu", Impulsor con "Maximilianoalejandrogarcia" (26 letras, 44 px) y Reflejo con 30 letras (32 px, una línea). Ninguno desborda.
+  - `showGameOnTicket: true`: "Tu juego: Simulador de carreras" cabe y no toca los píxeles.
+  - La entrada a los 0.45, 0.7, 0.9, 1.3 y 2.4 s.
+- Con la CPU frenada 4×: IDLE a 59 fps con 205 capas y el boleto a 57 fps con 301 capas.
+
+### Pendientes detectados
+- Probar el escaneo del QR con el marco rojo en el tótem real (§17).
+- Confirmar con el cliente que "Escanea aquí" puede sustituir "SCAN HERE".
+
+---
+
+## 2026-10-13 — El boleto solo con colores de CONAIP y Eliot
+
+**Fase:** 3 — Interfaz final (boleto)
+
+A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las dos identidades.
+
+### Paleta permitida
+- CONAIP (`MANUAL DE IDENTIDAD.pdf`, págs. 8 y 9): rojo `#AC141C`, azul `#0C53A2`, blanco y negro (variantes del logo).
+- Eliot (`assets/inspiration/Elliot_identidad_colores.jpeg`): Yellow X `#FFED00`, Yellow 1–6, negro, Black 80/60/40/20/10 % y blanco.
+
+### Qué cambió
+| Elemento | Antes | Ahora |
+|---|---|---|
+| Papel | Degradado plateado con reflejos translúcidos | Blanco con tres bandas diagonales en Black 10 % (`#E6E7E8`) |
+| Borde | Degradado dorado | Yellow X |
+| Talento | Azul marino `#083A73` con desfase magenta y cian | Azul CONAIP con desfase en rojo CONAIP y Yellow X |
+| Copias de la entrada del talento | Magenta y cian al 90 %, encima del texto | Rojo y Yellow X opacos, detrás del texto |
+| Píxeles CONAIP | Azul, azul oscuro, azul claro y rojo | Azul y rojo |
+| Píxeles Eliot | Dorado `#F2B705`, Yellow X y negro | Trama en Yellow X; sueltos en Yellow X, Yellow 2, negro y Black 80 % |
+| Textos | `#1D1D1B` | Negro |
+| "×" entre logos | Azul marino | Black 80 % |
+| Sombras del boleto y del marco del QR | Negro y rojo translúcidos | Sin sombra |
+| Fondo de la pantalla | Degradado azul | Azul CONAIP plano, como IDLE |
+| Tiempo de "Terminar" | Blanco translúcido sobre el rojo | Barra Yellow X de 12 px al pie del botón |
+
+- Tokens: se quitan `--azul-claro`, `--tinta`, `--cian` y `--magenta`, y se agrega `--negro-10` (Black 10 %: se usa su RGB, 230, 231, 232, porque el hex del manual no le corresponde).
+- El resto de las pantallas no cambia.
+
+**Archivos:** `src/renderer/components/Ticket.tsx`, `src/renderer/styles/{global,tokens}.css` y `AGENTS.md` (§7 y §14).
+
+### Verificación
+- 169 pruebas pasan; typecheck, lint y prettier limpios.
+- Capturas a 1080×1920 por CDP, con el boleto en reposo y a la mitad de la entrada del talento. En el CSS del boleto solo quedan tokens de las dos marcas, sin `rgba` ni degradados.
+
+---
+
+## 2026-10-13 — Las reglas de Reflejo dejan de llamarse "versátil"
+
+**Fase:** 3 — Interfaz final
+
+- Solo hay tres talentos: Acelerador (A), Impulsor (I) y Reflejo (V). "Versátil" era el nombre anterior de V y quedaba en las claves de las reglas, lo que hacía parecer que había un cuarto caso.
+- Se renombran:
+  - `reglas.versatilPorPregunta` → `reglas.reflejoPorPregunta`.
+  - `reglas.empateVersatil` → `reglas.empateReflejo`.
+  - `juegoVersatil` → `juegoReflejo` en `result.ts`.
+- La lógica no cambia.
+- Un `content.json` con las claves viejas ya no pasa el esquema; la app lo registra en el log y usa el siguiente archivo (§12). Aún no hay ninguno instalado en los tótems.
+
+**Archivos:** `resources/content.json`, `src/shared/{content,result}.ts`, `src/shared/{content,result}.test.ts` y `AGENTS.md` (§12 y §18).
+
+### Verificación
+- 169 pruebas pasan, incluidos los casos obligatorios del §6 y las 243 combinaciones; typecheck, lint y prettier limpios.
