@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#083a73" />
+    <title>Talento Impulsor · CONAIP × Eliot Awards</title>
+    <meta name="description" content="Tu tipo de talento es Impulsor. Tu reto: Pera de box." />
+    <link rel="preload" href="/img/impulsor.webp" as="image" type="image/webp" />
+    <link rel="stylesheet" href="/estilos.css" />
+  </head>
+  <!-- Generado desde una plantilla común: los tres talentos solo cambian en estos datos. -->
+  <body data-talento="impulsor">
+    <main class="pagina">
+      <h1 class="titulo">¡Este es tu reto!</h1>
+      <img
+        class="boleto"
+        src="/img/impulsor.webp"
+        width="1080"
+        height="1920"
+        alt="Tu tipo de talento es Impulsor. Tu reto: Pera de box."
+      />
+      <div class="acciones">
+        <button id="historia" class="boton boton--principal" type="button">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+          </svg>
+          Compartir en mi historia
+        </button>
+        <button id="guardar" class="boton boton--secundario" type="button">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 4v11" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 20h14" />
+          </svg>
+          Guardar imagen
+        </button>
+      </div>
+      <p id="aviso" class="aviso" role="status"></p>
+      <p class="pie">
+        Etiquétanos en <a href="https://www.instagram.com/conaip_mx/">@CONAIP_MX</a>
+      </p>
+    </main>
+    <script src="/compartir.js" defer></script>
+  </body>
+</html>
