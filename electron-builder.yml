@@ -12,6 +12,11 @@ files:
   - '!.claude/**'
   # Los logos ya van dentro de out/renderer/assets (Vite los empaqueta).
   - '!assets/**'
+  # La página del QR (web/) se publica aparte; no va dentro de la app del tótem.
+  - '!web/**'
+  # La demo web para revisión (demo/) tampoco.
+  - '!demo/**'
+  - '!{vite.demo.config.ts,tsconfig.demo.json}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
