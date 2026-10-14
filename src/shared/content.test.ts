@@ -18,7 +18,7 @@ describe('content.json', () => {
     expect(
       contenidoSchema.safeParse({ ...CONTENIDO_POR_DEFECTO, adminPinDefault: 'PENDIENTE' }).success
     ).toBe(false)
-    const reglas = { ...CONTENIDO_POR_DEFECTO.reglas, versatilPorPregunta: ['pera'] }
+    const reglas = { ...CONTENIDO_POR_DEFECTO.reglas, reflejoPorPregunta: ['pera'] }
     expect(contenidoSchema.safeParse({ ...CONTENIDO_POR_DEFECTO, reglas }).success).toBe(false)
   })
 })

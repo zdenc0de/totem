@@ -84,7 +84,7 @@ describe('tablaExport', () => {
       1,
       3,
       'V',
-      'Talento Versátil',
+      'Reflejo',
       'simulador',
       'Simulador de carreras',
       'No',

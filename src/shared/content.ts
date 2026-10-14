@@ -19,8 +19,8 @@ export const contenidoSchema = z.object({
   juegos: z.object({ simulador: juego, pera: juego }),
   reglas: z.object({
     juegoPorTalento: z.object({ A: juegoId, I: juegoId }),
-    versatilPorPregunta: z.array(juegoId).length(5),
-    empateVersatil: juegoId
+    reflejoPorPregunta: z.array(juegoId).length(5),
+    empateReflejo: juegoId
   }),
   tiempos: z.object({
     inactividadSeg: segundos,
@@ -42,16 +42,16 @@ export type ConfigRenderer = Omit<Contenido, 'adminPinDefault'> & {
 export const CONTENIDO_POR_DEFECTO: Contenido = {
   talentos: {
     A: {
-      nombre: 'Talento Acelerador',
-      frase: 'Decides rápido y conviertes las ideas en acción.'
+      nombre: 'Acelerador',
+      frase: 'Decides rápido y conviertes las ideas en acción'
     },
     I: {
-      nombre: 'Talento de Impacto',
-      frase: 'Tu constancia mueve los proyectos que otros sueltan.'
+      nombre: 'Impulsor',
+      frase: 'Tu constancia mueve los proyectos que otros sueltan'
     },
     V: {
-      nombre: 'Talento Versátil',
-      frase: 'Lees el momento y respondes antes que nadie.'
+      nombre: 'Reflejo',
+      frase: 'Lees el momento y respondes antes que nadie'
     }
   },
   juegos: {
@@ -60,8 +60,8 @@ export const CONTENIDO_POR_DEFECTO: Contenido = {
   },
   reglas: {
     juegoPorTalento: { A: 'simulador', I: 'pera' },
-    versatilPorPregunta: ['simulador', 'pera', 'simulador', 'pera', 'pera'],
-    empateVersatil: 'pera'
+    reflejoPorPregunta: ['simulador', 'pera', 'simulador', 'pera', 'pera'],
+    empateReflejo: 'pera'
   },
   tiempos: { inactividadSeg: 45, avisoInactividadSeg: 15, boletoSeg: 60 },
   showGameOnTicket: false,

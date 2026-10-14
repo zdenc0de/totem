@@ -7,7 +7,7 @@ import type { ConfigRenderer } from '@shared/content'
 import { ESTADO_INICIAL, type FlowState, type Pantalla } from './flow'
 
 const PANTALLAS: Pantalla[] = ['idle', 'registro', 'quiz', 'calculando', 'boleto', 'admin']
-// V V V A I → Versátil → simulador.
+// V V V A I → Reflejo → simulador.
 const RESPUESTAS: Talento[] = ['V', 'V', 'V', 'A', 'I']
 
 export function estadoDev(

@@ -59,8 +59,8 @@ describe('calcularResultado: reglas desde config', () => {
   it('usa el juego por talento y la regla de empate de la config', () => {
     const otras = {
       juegoPorTalento: { A: 'pera', I: 'simulador' },
-      versatilPorPregunta: ['pera', 'simulador', 'pera', 'simulador', 'simulador'],
-      empateVersatil: 'simulador'
+      reflejoPorPregunta: ['pera', 'simulador', 'pera', 'simulador', 'simulador'],
+      empateReflejo: 'simulador'
     } satisfies typeof reglas
     expect(calcularResultado(resp('A A A I V'), otras).juego).toBe('pera')
     expect(calcularResultado(resp('V V A A I'), otras).juego).toBe('simulador')

@@ -7,8 +7,8 @@ export const NUM_PREGUNTAS = 5
 export type Reglas = {
   juegoPorTalento: { A: Juego; I: Juego }
   /** Juego al que cuenta cada pregunta respondida con V. Índice 0 = pregunta 1. */
-  versatilPorPregunta: Juego[]
-  empateVersatil: Juego
+  reflejoPorPregunta: Juego[]
+  empateReflejo: Juego
 }
 
 export type Resultado = {
@@ -30,23 +30,22 @@ export function calcularResultado(respuestas: Talento[], reglas: Reglas): Result
   const conteo: Record<Talento, number> = { A: 0, I: 0, V: 0 }
   for (const r of respuestas) conteo[r]++
 
-  // Máximo único → ese talento; empate en el máximo (2-2-1) → Versátil.
+  // Máximo único → ese talento; empate en el máximo (2-2-1) → V (Reflejo).
   const max = Math.max(conteo.A, conteo.I, conteo.V)
   const lideres = TALENTOS.filter((t) => conteo[t] === max)
   const desempate = lideres.length > 1
   const talento = desempate ? 'V' : lideres[0]
 
-  const juego =
-    talento === 'V' ? juegoVersatil(respuestas, reglas) : reglas.juegoPorTalento[talento]
+  const juego = talento === 'V' ? juegoReflejo(respuestas, reglas) : reglas.juegoPorTalento[talento]
   return { conteo, talento, juego, desempate }
 }
 
-/** Gana el juego con más preguntas respondidas con V; empate → `empateVersatil`. */
-function juegoVersatil(respuestas: Talento[], reglas: Reglas): Juego {
+/** Gana el juego con más preguntas respondidas con V; empate → `empateReflejo`. */
+function juegoReflejo(respuestas: Talento[], reglas: Reglas): Juego {
   const votos: Record<Juego, number> = { simulador: 0, pera: 0 }
   respuestas.forEach((r, i) => {
-    if (r === 'V') votos[reglas.versatilPorPregunta[i]]++
+    if (r === 'V') votos[reglas.reflejoPorPregunta[i]]++
   })
-  if (votos.simulador === votos.pera) return reglas.empateVersatil
+  if (votos.simulador === votos.pera) return reglas.empateReflejo
   return votos.simulador > votos.pera ? 'simulador' : 'pera'
 }

@@ -11,7 +11,7 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }))
 
 const conFrase = (frase: string): Contenido => ({
   ...CONTENIDO_POR_DEFECTO,
-  talentos: { ...CONTENIDO_POR_DEFECTO.talentos, A: { nombre: 'Talento Acelerador', frase } }
+  talentos: { ...CONTENIDO_POR_DEFECTO.talentos, A: { nombre: 'Acelerador', frase } }
 })
 
 function escribir(nombre: string, valor: unknown): string {

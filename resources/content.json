@@ -1,16 +1,16 @@
 {
   "talentos": {
     "A": {
-      "nombre": "Talento Acelerador",
-      "frase": "Decides rápido y conviertes las ideas en acción."
+      "nombre": "Acelerador",
+      "frase": "Decides rápido y conviertes las ideas en acción"
     },
     "I": {
-      "nombre": "Talento de Impacto",
-      "frase": "Tu constancia mueve los proyectos que otros sueltan."
+      "nombre": "Impulsor",
+      "frase": "Tu constancia mueve los proyectos que otros sueltan"
     },
     "V": {
-      "nombre": "Talento Versátil",
-      "frase": "Lees el momento y respondes antes que nadie."
+      "nombre": "Reflejo",
+      "frase": "Lees el momento y respondes antes que nadie"
     }
   },
   "juegos": {
@@ -30,8 +30,8 @@
       "A": "simulador",
       "I": "pera"
     },
-    "versatilPorPregunta": ["simulador", "pera", "simulador", "pera", "pera"],
-    "empateVersatil": "pera"
+    "reflejoPorPregunta": ["simulador", "pera", "simulador", "pera", "pera"],
+    "empateReflejo": "pera"
   },
   "tiempos": {
     "inactividadSeg": 45,
