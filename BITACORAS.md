@@ -658,3 +658,92 @@ A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las
 
 ### Verificación
 - 169 pruebas pasan, incluidos los casos obligatorios del §6 y las 243 combinaciones; typecheck, lint y prettier limpios.
+
+## 2026-10-14 — Reflejo siempre al simulador, QR por talento y respaldo en USB en tiempo real
+
+**Fase:** pruebas y correcciones (congelamiento de funciones). Lo pidió el cliente: proteger los registros (~1500) ante cualquier falla y que el Excel salga perfecto.
+
+### Regla del juego y QR por talento
+- El cliente confirmó que **Reflejo va siempre al simulador**, también cuando gana por desempate; coincide con las imágenes de `assets/tickets/tipoJuego/` (acelerador_simulador, impulsor_pera, reflejo_simulador).
+- `reglas` queda solo como `juegoPorTalento: { A: simulador, I: pera, V: simulador }`; se quitan `reflejoPorPregunta` y `empateReflejo`. Las 243 combinaciones dan 192 simulador / 51 pera (A 51, I 51, V 141).
+- Como cada talento lleva siempre al mismo juego, los **QR pasan a ser uno por talento** (`talentos.{A,I,V}.qrUrl` / `qrImage`), para que cada uno abra la página con la imagen de su talento. `juegos` solo conserva el nombre.
+- Se revisaron las preguntas contra la tabla final del cliente: coinciden. Única diferencia de texto: la opción Acelerador de la pregunta 2 dice "precisión y estrategia." sin el "Con"; se deja como estaba hasta que confirmen (§18).
+
+### Backend
+- `storage.ts`:
+  - Al arrancar **empareja principal y backup**: si la app murió entre las dos escrituras, al que le falte un registro se le agrega (antes el backup se quedaba sin él para siempre; se reprodujo matando el proceso).
+  - Cada línea se valida **completa** al leerla (todos los campos y tipos). Antes solo se revisaban id, correo y teléfono, y una línea incompleta habría tumbado la exportación entera.
+  - Cuenta los registros que no se pudieron escribir en ningún archivo (`fallos()`).
+- `respaldo.ts` (nuevo): **USB de respaldo en tiempo real**.
+  - Solo usa una unidad con la carpeta `TotemRespaldo` en la raíz y nunca la del sistema.
+  - Cada registro se agrega a `registros_{T1}.jsonl` con fsync en el mismo momento en que se guarda en el disco.
+  - `registros_{T1}.xlsx` y `.csv` se regeneran cada 10 registros o cada 30 s.
+  - Si la USB se retira, el tótem sigue; al volver se pone al día sola (revisión cada 15 s). Nunca lanza errores hacia el flujo del participante.
+- `export.ts`: Fecha como **fecha real de Excel** (`dd/mm/yyyy`, filtrable) y Hora en columna aparte, tomadas del texto ISO para que no cambien con la zona horaria de quien abra el archivo. Los archivos se escriben a `.tmp` + rename: nunca quedan a medias.
+- IPC: `admin:prepararRespaldo` (crea la carpeta en la USB elegida) y `sistema:alerta` (público, solo un booleano). `admin:estado` agrega el respaldo, las fallas de guardado y la hora del tótem.
+
+### Panel admin y pantalla de inicio
+- El panel muestra la **fecha y hora del tótem** (sin internet no se sincronizan), la sección **Respaldo en USB** ("USB D:\ · 1500 de 1500 registros copiados · Excel de las 11:50") con el botón "Preparar USB", y avisos de: sin USB de respaldo, falla de la USB y registros no guardados.
+- Para que todo quepa en 1920 px: los QR pendientes van en un solo aviso, los juegos en una línea de texto y el total más chico. Si aun así no cupiera, el panel se desplaza en vez de cortar botones.
+- En IDLE, un **punto rojo pequeño** en la esquina inferior derecha avisa al staff que revise el panel.
+
+**Archivos:** `resources/content.json`, `src/shared/{result,content,ipc}.ts`, `src/main/{storage,respaldo,export,config,ipc,index}.ts`, `src/main/storage.fixture.ts`, `src/preload/index.ts`, `src/renderer/screens/{Admin,Boleto,Idle}.tsx`, `src/renderer/styles/global.css`, pruebas (`result`, `content`, `config`, `storage`, `export` y la nueva `respaldo.test.ts`), `AGENTS.md` (§6, §7, §8, §9, §11, §12, §18 y §19) y `README.md`.
+
+### Verificación
+- 184 pruebas pasan (16 archivos), entre ellas 10 nuevas del respaldo: USB ausente, copia y Excel, cada 10 registros o por tiempo, desconexión y reconexión, USB vaciada, línea cortada en la USB, error de escritura y recuperación, peticiones simultáneas sin duplicados, cambio de ID y nunca la unidad del sistema. Typecheck y lint limpios (salvo los avisos de CRLF de la copia de trabajo en Windows).
+- **Prueba end-to-end con la app compilada y una USB física (D:, FAT32)**, por el mismo IPC que usa la pantalla:
+  - Sin la carpeta, el tótem enciende la alerta; "Preparar USB" la crea y la alerta se apaga.
+  - 700 registros con nombres difíciles (acentos, ñ, apóstrofes, guiones, 60 caracteres) y correos con mayúsculas y espacios.
+  - Ráfaga de 2000 y muerte del proceso a la mitad: al reabrir, 764 registros completos, iguales en el disco y en la USB.
+  - USB "retirada" (carpeta renombrada): el tótem siguió registrando 100 más con la alerta encendida; al reconectarla se puso al día sola en 15 s.
+  - Total 1500 y exportación manual desde el panel con PIN.
+  - Resultado: **1500 registros idénticos en las 7 copias** (principal, backup, JSONL de la USB, Excel y CSV de la USB, Excel y CSV manuales), comparados celda por celda; teléfonos como texto, fecha como fecha de Excel, BOM en los CSV, sin temporales, sin duplicados, y todo Reflejo con simulador. Cero errores.
+  - Tiempo por registro (revisar duplicado + guardar en disco y USB): mediana 3 ms, máximo 382 ms cuando coincide con la regeneración del Excel.
+  - La USB quedó exactamente como estaba (solo se crearon y borraron `TotemRespaldo` y `PruebaTotem`).
+- Instalador generado por primera vez en Windows: `dist/totem-talento-0.1.0-setup.exe` (112 MB), con `content.json` junto al ejecutable. No se instaló en la máquina de desarrollo porque arranca en kiosco y se registra para iniciar con Windows.
+
+### Pendientes
+- URLs finales de los 3 QR (página en Vercel).
+- Probar en los tótems reales: táctil, resolución, diálogo de la USB, arranque automático y gestos de Windows.
+- Las USB de los tótems: de preferencia formateadas en NTFS, que tiene journaling (la de prueba era FAT32 y funcionó, pero FAT32 y exFAT toleran peor los apagones).
+
+## 2026-10-14 — Página del QR publicada en Vercel y QR reales en el tótem
+
+**Fase:** pruebas y correcciones.
+
+- `web/` (nuevo): página estática por talento (`/acelerador`, `/impulsor`, `/reflejo`) con la imagen del reto y dos botones:
+  - **Compartir en mi historia**: menú de compartir del celular con el archivo (Web Share API); ahí se elige Instagram → Historia. Si el navegador no lo permite, se descarga y se explica cómo subirla.
+  - **Guardar imagen**: descarga directa en Android (`conaip-eliot-{talento}.jpg`); en iPhone abre el menú para "Guardar imagen" (una descarga iría a "Archivos").
+  - La imagen se precarga al abrir la página: Safari solo deja abrir el menú de compartir justo después del toque.
+- Imágenes desde `assets/tickets/tipoJuego/` (PNG de 6.7 MB): `img/{talento}.jpg` a 1080×1920, calidad 85 (~350 KB), para compartir; `img/{talento}.webp` (~190 KB) para mostrar. El marco blanco alrededor del ticket viene opaco en el diseño del cliente y se respeta.
+- Sin frameworks ni recursos de terceros, fuentes locales; cabeceras `nosniff`, `no-referrer` y caché de 1 día para imágenes y fuentes (`vercel.json`). `.env.local` y `.vercel` quedan fuera de git y del despliegue.
+- Publicada en la cuenta Hobby de Vercel solo para pruebas: <https://totem-talento.vercel.app>. Antes del evento hay que decidir dónde queda la definitiva (Hobby es para uso no comercial).
+- `resources/content.json`: `talentos.{A,I,V}.qrUrl` apuntan a las tres páginas.
+- `electron-builder.yml` excluye `web/` del instalador; `eslint.config.mjs` quita la regla de tipos de retorno (de TypeScript) solo para `web/**/*.js`.
+
+**Archivos:** `web/` (nuevo), `resources/content.json`, `electron-builder.yml`, `eslint.config.mjs` y `README.md`.
+
+### Verificación
+- Local, con Edge emulando Pixel 7 e iPhone 12: imagen a 1080×1920, cero peticiones a terceros, "Guardar imagen" descarga `conaip-eliot-reflejo.jpg` en Android y en iPhone muestra "En el menú, toca «Guardar imagen»".
+- En Vercel: las tres rutas y los recursos responden 200 sin protección; `/.env.local` y `/.vercel/project.json` responden 404; las cabeceras se aplican.
+- Los tres QR que genera la app (sin red) se decodifican exactamente a su URL (versión 4, fáciles de leer). El QR del boleto en pantalla se decodifica también desde una captura reducida; mide 480 px en el artboard (mínimo pedido: 380).
+
+### Pendientes
+- Probar con celulares reales (iPhone y Android): escanear desde el tótem, compartir a la historia y guardar en la galería.
+- Decidir el alojamiento definitivo de la página y, si cambian las URLs, actualizar `content.json`.
+
+## 2026-10-14 — Demo web de la app completa para que el cliente la revise
+
+**Fase:** pruebas y correcciones.
+
+- `demo/` (nuevo): la app del tótem completa en el navegador, publicada aparte de la página del QR: <https://totem-talento-demo.vercel.app>. Sirve para que el cliente recorra todo, valide cómo se ve y mande solo los cambios finales.
+- Es el mismo renderer (`src/renderer`) sin cambios. Solo se sustituye `window.totem` por `demo/simulador.ts`, que implementa la misma `TotemApi` del preload (el typecheck lo obliga) y reutiliza la lógica real de main: `armarRegistro`, `generarQrs` y `tablaExport` / `aCsv` / `aXlsx`. Los registros se guardan en el `localStorage` de quien revisa; "Exportar a USB" descarga el Excel y el CSV tal como salen en el tótem.
+- `demo/shims/` sustituye `fs` y `path` (los importan esos módulos para escribir en disco; la demo nunca los usa).
+- `demo/guia.ts`: botón flotante "Guía de la demo" con los pasos, el PIN 1234 y "Borrar mis registros de prueba". Abierta la primera vez; no forma parte del tótem.
+- `vite.demo.config.ts`, `tsconfig.demo.json` y scripts `build:demo`, `deploy:demo` y `typecheck:demo` (incluido en `typecheck`). `demo/dist` en `.gitignore`; `electron-builder.yml` excluye `demo/`.
+
+**Archivos:** `demo/` (nuevo), `vite.demo.config.ts`, `tsconfig.demo.json`, `package.json`, `.gitignore`, `electron-builder.yml` y `README.md`.
+
+### Verificación
+- Recorrido completo con Edge, en local y sobre la URL publicada: inicio → registro (María José Núñez Peña, correo con mayúsculas) → 5 preguntas → calculando → boleto "María, tu tipo de talento es REFLEJO" con QR que se decodifica a `https://totem-talento.vercel.app/reflejo` → panel admin con PIN → "Exportar a USB" descarga `registros_T1_….xlsx` y `.csv`: correo normalizado, fecha como fecha de Excel, Reflejo → simulador, CSV con BOM y acentos. Cero errores en consola.
+- Vista de celular (iPhone 12) revisada. `/.env.local` y `/.vercel/project.json` responden 404 en la demo publicada.
