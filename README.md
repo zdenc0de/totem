@@ -34,6 +34,17 @@ Todo vive en `%APPDATA%\Totem Talento\`:
 - `data\settings.json`: ID del tótem (T1/T2) y hash del PIN si se cambió.
 - `logs\`: un archivo por día. Nunca contienen datos personales.
 
+### USB de respaldo (en tiempo real)
+
+Cada tótem lleva una USB fija con la carpeta `TotemRespaldo` en su raíz (se crea desde el panel con "Preparar USB"). Ahí se mantienen:
+
+- `registros_T1.jsonl`: cada registro se copia en el momento en que se guarda.
+- `registros_T1.xlsx` y `registros_T1.csv`: listos para abrir; se regeneran cada 10 registros o cada 30 s y nunca quedan a medias.
+
+Si la USB se retira, el tótem sigue funcionando y muestra un punto rojo pequeño en la esquina inferior derecha de la pantalla de inicio; al reconectarla se pone al día sola. Si el tótem se daña, basta con sacar la USB. Solo se escribe en una unidad con esa carpeta, nunca en el disco del sistema.
+
+En desarrollo, `TOTEM_RESPALDO_RAICES=ruta1;ruta2` sustituye las unidades donde se busca la carpeta (para pruebas).
+
 ## Textos, tiempos y QR (`content.json`)
 
 - Se lee en este orden; el primero válido gana:
@@ -42,10 +53,28 @@ Todo vive en `%APPDATA%\Totem Talento\`:
   3. Los valores por defecto del código.
 - Para cambiar algo el día del evento (URLs de los QR, frases, tiempos), copia el `content.json` del instalador a `%APPDATA%\Totem Talento\`, edítalo y reinicia la app. No hace falta reinstalar.
 - Si el archivo tiene un error, se ignora y el log dice por qué.
-- QR:
+- QR: uno por talento (`talentos.A`, `talentos.I`, `talentos.V`), porque cada talento lleva siempre al mismo juego (Reflejo → simulador).
   - Con `qrUrl` (http/https), el QR se genera en el tótem sin internet.
   - Con `qrImage` (un PNG o JPG junto al `content.json`), se usa esa imagen.
   - Sin ninguno, el boleto dice "QR pendiente" y el panel lo avisa.
+
+## Demo web para revisión (`demo/`)
+
+La app del tótem completa en el navegador, para que el cliente la valide: <https://totem-talento-demo.vercel.app>. Mismo código y mismas pantallas; los registros se guardan en el navegador de quien revisa y "Exportar a USB" descarga el Excel y el CSV reales. Detalles en [demo/README.md](demo/README.md). Publicar: `npm run deploy:demo`.
+
+## Página del QR (`web/`)
+
+Cada QR del boleto abre la página de su talento, con la imagen de su reto y dos botones: **Compartir en mi historia** (menú de compartir del celular → Instagram → Historia; ninguna web puede publicar directo en Instagram) y **Guardar imagen** (descarga en Android; en iPhone abre el menú con "Guardar imagen", porque una descarga ahí va a "Archivos").
+
+- URLs de prueba (cuenta Hobby de Vercel, solo para pruebas; antes del evento decidir dónde queda la definitiva):
+  - <https://totem-talento.vercel.app/acelerador>
+  - <https://totem-talento.vercel.app/impulsor>
+  - <https://totem-talento.vercel.app/reflejo>
+- HTML/CSS/JS estático, sin frameworks ni recursos de terceros. Fuentes locales.
+- `img/{talento}.jpg`: 1080×1920 (tamaño de historia), calidad 85; es el archivo que se guarda o comparte. `img/{talento}.webp`: la misma imagen, más ligera, para mostrarla en la página. Ambas salen de `assets/tickets/tipoJuego/`.
+- Las tres páginas son iguales salvo el talento; si se cambia una, cambiar las tres.
+- Publicar: `cd web && npx vercel deploy --prod`. Si cambian las URLs, actualizar `talentos.{A,I,V}.qrUrl` en `content.json` (no hace falta reinstalar, ver arriba).
+- No se publica dentro de la app del tótem (`electron-builder.yml` excluye `web/`).
 
 ## Despliegue en el tótem (Windows 11)
 
@@ -58,10 +87,14 @@ Todo vive en `%APPDATA%\Totem Talento\`:
    - Desactivar la aparición automática del teclado táctil.
    - Inicio de sesión automático.
    - Escalado de pantalla al 100 % y barra de tareas oculta.
+   - **Fecha, hora y zona horaria correctas** (sin internet no se sincronizan solas).
 3. En el panel admin:
    - Elegir **T1** en un tótem y **T2** en el otro (hasta entonces el panel avisa "ID sin confirmar").
    - Cambiar el PIN de fábrica.
+   - Conectar la USB de respaldo y tocar "Preparar USB"; el punto rojo de la pantalla de inicio debe desaparecer.
+   - Revisar la fecha y hora que muestra el panel.
    - Revisar que no haya avisos de QR pendiente.
+4. Un no-break por tótem.
 
 ### Prueba en el tótem (AGENTS.md §17)
 
@@ -75,3 +108,4 @@ Todo vive en `%APPDATA%\Totem Talento\`:
 - [ ] El `.xlsx` y el `.csv` abren en Excel con acentos y ñ correctos.
 - [ ] Al reiniciar Windows, la app arranca sola.
 - [ ] Al matar la app desde el Administrador de tareas a medio uso, los registros siguen completos al reabrir.
+- [ ] Al retirar la USB de respaldo aparece el punto rojo; al reconectarla, el panel muestra "N de N registros copiados" y el `.xlsx` de la USB abre con todos.
