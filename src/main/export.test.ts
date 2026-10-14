@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, readFileSync, rmSync } from 'fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import ExcelJS from 'exceljs'
@@ -43,6 +43,7 @@ describe('tablaExport', () => {
       'ID',
       'Tótem',
       'Fecha',
+      'Hora',
       'Nombre(s)',
       'Apellido',
       'Correo',
@@ -68,7 +69,8 @@ describe('tablaExport', () => {
     expect(tabla.filas[0]).toEqual([
       'id-1',
       'T1',
-      '2026-10-18T10:00:00-06:00',
+      { anio: 2026, mes: 10, dia: 18 },
+      '10:00:00',
       'María José',
       'Núñez Peña',
       'maria@correo.com',
@@ -123,8 +125,16 @@ describe('escribirExport', () => {
     await libro.xlsx.readFile(join(dir, archivos[0]))
     const hoja = libro.getWorksheet('Registros')!
     expect(hoja.rowCount).toBe(3)
-    expect(hoja.getRow(2).getCell(4).value).toBe('María José')
-    expect(hoja.getRow(2).getCell(5).value).toBe('Núñez Peña')
-    expect(hoja.getRow(2).getCell(7).value).toBe('5512345678')
+    expect(hoja.getRow(2).getCell(5).value).toBe('María José')
+    expect(hoja.getRow(2).getCell(6).value).toBe('Núñez Peña')
+    expect(hoja.getRow(2).getCell(8).value).toBe('5512345678')
+    // La fecha es una fecha real de Excel (filtrable), con el día del tótem; la hora va aparte.
+    const fecha = hoja.getRow(2).getCell(3)
+    expect(fecha.value).toEqual(new Date(Date.UTC(2026, 9, 18)))
+    expect(fecha.numFmt).toBe('dd/mm/yyyy')
+    expect(hoja.getRow(2).getCell(4).value).toBe('10:00:00')
+    expect(csv).toContain(',2026-10-18,10:00:00,')
+    // No quedan temporales.
+    expect(readdirSync(dir).sort()).toEqual([...archivos].sort())
   })
 })
