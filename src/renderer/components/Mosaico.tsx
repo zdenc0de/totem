@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react'
+import { Pixeles, type Cuadro } from './Pixeles'
+import { aleatorio } from './aleatorio'
 
 // Escena de píxeles de IDLE: une las dos marcas en el lenguaje de mosaico de Eliot.
 // - Rombo de trama amarilla (forma del sello "Más cerca de ti" de Eliot) que late en una onda.
@@ -7,6 +8,7 @@ import type { CSSProperties } from 'react'
 // - La franja blanca de logos se deshace en píxeles hacia el azul.
 // Todo va en px del artboard sobre una retícula común. Se calcula una sola vez con semilla fija,
 // así la composición es siempre la misma; la animación es solo CSS (transform y opacity).
+// El render y la animación los comparte con el boleto (Pixeles.tsx).
 
 const PASO = 44 // separación de la retícula
 const CX = 540 // centro del rombo (y nodo de la retícula)
@@ -33,17 +35,6 @@ const FRANJAS: { desde: [number, number]; hasta: [number, number] }[] = [
 ]
 const GROSOR_FRANJA = 26 // radio en px
 
-type Tipo = 'trama' | 'pixel' | 'brillo' | 'paloma' | 'franja' | 'borde'
-type Cuadro = {
-  x: number
-  y: number
-  lado: number
-  color: string
-  tipo: Tipo
-  retraso: number
-  d: number
-}
-
 const PIXELES_SOBRE_AZUL = [
   ...Array(3).fill('var(--amarillo-x)'),
   'var(--amarillo-2)',
@@ -55,17 +46,6 @@ const PIXELES_SOBRE_AZUL = [
   'var(--negro)',
   'var(--negro-80)'
 ]
-
-// PRNG pequeño y determinista (mulberry32).
-function aleatorio(semilla: number): () => number {
-  let s = semilla
-  return () => {
-    s = (s + 0x6d2b79f5) | 0
-    let t = Math.imul(s ^ (s >>> 15), 1 | s)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 // Distancia normalizada al centro: 0 en el centro y 1 en la orilla del rombo redondeado
 // (un cuadrado redondeado girado 45°).
@@ -204,25 +184,5 @@ function calcularCuadros(): Cuadro[] {
 const CUADROS = calcularCuadros()
 
 export function Mosaico(): React.JSX.Element {
-  return (
-    <div className="mosaico" aria-hidden="true">
-      {CUADROS.map(({ x, y, lado, color, tipo, retraso, d }) => (
-        <span
-          key={`${x},${y}`}
-          className={`mosaico__cuadro mosaico__cuadro--${tipo}`}
-          style={
-            {
-              left: x - lado / 2,
-              top: y - lado / 2,
-              width: lado,
-              height: lado,
-              background: color,
-              '--retraso': Math.round(retraso),
-              '--d': d.toFixed(3)
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
+  return <Pixeles cuadros={CUADROS} />
 }
