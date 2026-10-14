@@ -82,7 +82,7 @@ Cada QR del boleto abre la página de su talento, con la imagen de su reto y dos
   - <https://totem-talento.vercel.app/impulsor>
   - <https://totem-talento.vercel.app/reflejo>
 - HTML/CSS/JS estático, sin frameworks ni recursos de terceros. Fuentes locales.
-- Misma identidad que las pantallas del tótem: azul CONAIP plano, banda de logos que se deshace en píxeles, trama de Eliot, Poppins y botones Yellow X. Medidas del artboard de 1080 px a escala de celular; en pantallas anchas, dos columnas.
+- Misma identidad que las pantallas del tótem: azul CONAIP plano, Poppins y botones Yellow X. Las páginas de talento solo muestran "{Talento}, tu reto es:", el boleto, los botones y el Instagram de CONAIP, con la trama pixeleada de Eliot en la orilla derecha, y en el celular caben en una pantalla sin scroll (el boleto toma el alto que sobra); la de inicio lleva además la banda de logos que se deshace en píxeles. Medidas del artboard de 1080 px a escala de celular; en pantallas anchas, dos columnas.
 - Estructura: en la raíz solo las páginas (sus nombres son las URLs de los QR: `index.html`, `acelerador.html`, `impulsor.html`, `reflejo.html`); todo lo demás en `assets/`:
   - `css/estilos.css`, `js/compartir.js` y `fonts/` (Poppins 400, 700 y 900).
   - `img/logos/`: CONAIP y Eliot.

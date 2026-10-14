@@ -1,8 +1,8 @@
-/* Páginas del QR: el participante ve su reto y lo guarda o lo comparte.
-   Misma identidad que las pantallas del tótem (src/renderer/styles): azul CONAIP plano, banda
-   blanca de logos que se deshace en píxeles (IDLE), trama de Eliot en la orilla (boleto),
-   Poppins y botones Yellow X. Las medidas son las del artboard de 1080 px del tótem a escala de
-   celular (~0.36); en pantallas anchas, a ~0.5. */
+/* Páginas del QR: el participante ve su boleto y lo guarda o lo comparte.
+   Misma identidad que las pantallas del tótem (src/renderer/styles): azul CONAIP plano, Poppins y
+   botones Yellow X, con la trama de Eliot en la orilla (boleto); la página de inicio lleva además
+   la banda blanca de logos que se deshace en píxeles (IDLE). Las medidas son las del artboard de
+   1080 px del tótem a escala de celular (~0.36); en pantallas anchas, a ~0.5. */
 @font-face {
   font-family: 'Poppins';
   font-weight: 400;
@@ -62,11 +62,16 @@ body {
   font-weight: 400;
   line-height: 1.35;
   color: var(--blanco);
-  /* Trama de Eliot desde la orilla derecha, justo debajo de la banda de logos. */
-  background: var(--azul) url('/assets/img/pixeles/trama.svg') no-repeat right 0 top
-    var(--banda-alto) / auto var(--trama-alto);
+  /* Trama de Eliot desde la orilla derecha, como las esquinas del boleto. */
+  background: var(--azul) url('/assets/img/pixeles/trama.svg') no-repeat right 0 top 0 / auto
+    var(--trama-alto);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Con banda de logos, la trama empieza justo debajo de ella. */
+body:has(> .banda) {
+  background-position: right 0 top var(--banda-alto);
 }
 
 img {
@@ -210,82 +215,41 @@ a {
   height: 24px;
 }
 
-/* Página del reto (/acelerador, /impulsor, /reflejo) */
+/* Página del reto (/acelerador, /impulsor, /reflejo). En el celular todo cabe en una pantalla,
+   sin scroll: el boleto toma el alto que dejan el texto, los botones y las redes. `svh` es el alto
+   con las barras del navegador visibles. */
 .reto {
   display: flex;
   flex-direction: column;
   max-width: calc(480px + var(--gutter) * 2);
+  height: 100vh;
+  height: 100svh;
   margin: 0 auto;
-  padding: 56px var(--gutter) 0;
-}
-
-/* Deja libre la orilla de la trama. */
-.reto__texto {
-  padding-right: 56px;
+  padding: max(16px, env(safe-area-inset-top)) var(--gutter) max(16px, env(safe-area-inset-bottom));
 }
 
 .reto__intro {
   font-size: 18px;
-}
-
-/* El juego se revela aquí (el boleto dice "para descubrir tu juego"): mismo desfase de color que
-   el nombre del talento en el boleto. Al entrar, dos copias se separan y se asientan como una
-   señal que se sintoniza. */
-.reto__juego {
-  position: relative;
-  isolation: isolate;
-  margin-top: 6px;
-  font-size: clamp(36px, 11vw, 46px);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-  text-shadow:
-    -3px 2px 0 var(--rojo),
-    3px -2px 0 var(--amarillo-x);
-}
-
-.reto__juego::before,
-.reto__juego::after {
-  content: attr(data-texto);
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  text-shadow: none;
-  opacity: 0;
-  animation: 600ms steps(1, end) 450ms both;
-}
-
-.reto__juego::before {
-  color: var(--rojo);
-  animation-name: sintonia-rojo;
-}
-
-.reto__juego::after {
-  color: var(--amarillo-x);
-  animation-name: sintonia-amarillo;
+  text-align: center;
 }
 
 .reto__boleto {
+  flex: 1 1 0;
+  /* En pantallas muy bajas (celular acostado) la página crece y se desplaza. */
+  min-height: 240px;
   width: 100%;
-  height: auto;
-  margin-top: 28px;
+  margin-top: 12px;
+  object-fit: contain;
   /* Se puede mantener presionada para guardarla. */
   -webkit-touch-callout: default;
   animation: boleto-entrada 650ms cubic-bezier(0.22, 1.25, 0.36, 1) both;
 }
 
-/* En el celular los botones se quedan al pie de la pantalla mientras se ve el boleto. */
 .reto__acciones {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 20px calc(var(--gutter) * -1) 0;
-  padding: 12px var(--gutter) max(16px, env(safe-area-inset-bottom));
-  background: var(--azul);
+  margin-top: 16px;
 }
 
 .reto__aviso {
@@ -295,6 +259,38 @@ a {
 
 .reto__aviso:empty {
   display: none;
+}
+
+.reto .pie {
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0 0;
+}
+
+/* Centrada, la esquina inclinada sobresale igual de los dos lados. */
+.reto .red {
+  margin-left: 0;
+}
+
+/* Celulares bajos: botones y redes más compactos para dejarle alto al boleto. */
+@media (max-height: 700px) {
+  .reto .boton {
+    min-height: 50px;
+  }
+
+  .reto__acciones {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .reto .pie {
+    gap: 6px;
+    padding-top: 12px;
+  }
+
+  .reto .red {
+    height: 42px;
+  }
 }
 
 /* Página de inicio (para revisar las tres) */
@@ -424,59 +420,8 @@ a {
   }
 }
 
-/* Mismo movimiento que .ticket__talento del tótem, a la escala del titular. */
-@keyframes sintonia-rojo {
-  0% {
-    opacity: 0;
-    transform: none;
-  }
-  15% {
-    opacity: 1;
-    transform: translate(-12px, 2px);
-  }
-  35% {
-    transform: translate(7px, 1px);
-  }
-  55% {
-    transform: translate(-5px, 2px);
-  }
-  75% {
-    transform: translate(2px, 1px);
-  }
-  100% {
-    opacity: 0;
-    transform: none;
-  }
-}
-
-@keyframes sintonia-amarillo {
-  0% {
-    opacity: 0;
-    transform: none;
-  }
-  15% {
-    opacity: 1;
-    transform: translate(10px, -2px);
-  }
-  35% {
-    transform: translate(-8px, -1px);
-  }
-  55% {
-    transform: translate(4px, -1px);
-  }
-  75% {
-    transform: translate(-2px, -1px);
-  }
-  100% {
-    opacity: 0;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .reto__boleto,
-  .reto__juego::before,
-  .reto__juego::after {
+  .reto__boleto {
     animation: none;
   }
 }
@@ -514,52 +459,45 @@ a {
     padding-top: 72px;
   }
 
+  /* El texto va sobre el boleto, a la izquierda; los botones y las redes, a la derecha. */
   .reto {
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto auto 1fr;
+    grid-template-rows: auto 1fr auto auto 1fr;
     grid-template-areas:
+      'texto .'
       'boleto .'
-      'boleto texto'
       'boleto acciones'
       'boleto pie'
       'boleto .';
-  }
-
-  .reto__texto {
-    grid-area: texto;
-    padding-right: 96px;
+    height: auto;
+    padding-top: 40px;
+    padding-bottom: 40px;
   }
 
   .reto__intro {
-    font-size: 24px;
-  }
-
-  .reto__juego {
-    margin-top: 8px;
-    font-size: 72px;
-    text-shadow:
-      -4px 3px 0 var(--rojo),
-      4px -2px 0 var(--amarillo-x);
+    grid-area: texto;
+    font-size: 22px;
   }
 
   .reto__boleto {
     grid-area: boleto;
     width: auto;
-    height: min(100svh - var(--banda-alto) - 72px - 48px, 860px);
-    margin: 0 0 48px;
+    /* Alto de la pantalla menos márgenes, texto y separación. */
+    height: min(100svh - 80px - 30px - 16px, 900px);
+    min-height: 0;
+    margin-top: 16px;
   }
 
   .reto__acciones {
     grid-area: acciones;
-    position: static;
     max-width: 420px;
-    margin: 40px 0 0;
-    padding: 0;
-    background: none;
+    margin: 0;
   }
 
   .reto .pie {
     grid-area: pie;
+    max-width: 420px;
+    padding-top: 28px;
   }
 
   .indice {
