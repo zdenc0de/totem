@@ -453,7 +453,7 @@ p {
   align-items: center;
   justify-content: space-between;
   padding-top: 48px;
-  background: radial-gradient(circle at 50% 38%, #1360b5 0%, var(--azul-oscuro) 62%, #041d3f 100%);
+  background: var(--azul);
 }
 
 .boleto__terminar {
@@ -462,11 +462,12 @@ p {
   width: 640px;
 }
 
-/* Se vacía de izquierda a derecha durante boletoSeg (solo transform). */
+/* Barra amarilla al pie del botón que se vacía durante boletoSeg (solo transform). */
 .boleto__terminar-tiempo {
   position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.22);
+  inset: auto 0 0;
+  height: 12px;
+  background: var(--amarillo-x);
   transform-origin: right center;
   animation-name: boleto-vaciar;
   animation-timing-function: linear;
@@ -488,7 +489,7 @@ p {
 
 .ticket {
   position: relative;
-  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.45));
+  color: var(--negro);
 }
 
 .ticket__fondo {
@@ -498,13 +499,23 @@ p {
   height: 100%;
 }
 
-.ticket__franja {
-  position: relative;
+/* Bloques del boleto: la posición vertical viene de Ticket.tsx; aquí solo se centran. */
+.ticket__logos,
+.ticket__encabezado,
+.ticket__qr,
+.ticket__descubre,
+.ticket__red {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+}
+
+.ticket__logos {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 48px;
-  padding-top: 8px;
+  gap: 26px;
 }
 
 .ticket__logo-conaip {
@@ -513,93 +524,187 @@ p {
 
 .ticket__logos-division {
   width: 3px;
-  height: 104px;
+  height: 92px;
   background: var(--negro-20);
 }
 
-.ticket__logo-eliot {
-  height: 112px;
+.ticket__logos-por {
+  margin-right: 6px;
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--negro-80);
 }
 
-.ticket__cuerpo {
-  position: absolute;
-  inset: 236px 64px 56px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  text-align: center;
+.ticket__logo-eliot {
+  height: 136px;
 }
 
 .ticket__encabezado {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  width: 100%;
+  justify-content: center;
+  text-align: center;
 }
 
 .ticket__nombre {
   width: 100%;
-  font-size: 104px;
+  font-size: 80px;
   font-weight: 800;
   line-height: 1.1;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   overflow-wrap: anywhere;
 }
 
 .ticket__etiqueta {
-  font-size: 38px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
-.ticket__acento {
-  width: 360px;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--rojo) 0 33%, var(--blanco) 33% 67%, var(--dorado) 67%);
-}
-
+/* Nombre del talento con el desfase de color del boceto, en colores de las marcas: rojo CONAIP
+   abajo a la izquierda y amarillo Eliot a la derecha. Al entrar, dos copias se separan y se
+   asientan como una señal que se sintoniza. */
 .ticket__talento {
-  width: 100%;
-  height: 232px;
+  position: relative;
+  /* Las copias de color (::before y ::after) van detrás del texto. */
+  isolation: isolate;
   display: flex;
-  /* safe: si llegara a desbordar, que sea hacia abajo, donde se puede medir. */
   align-items: safe center;
-  justify-content: center;
+  justify-content: safe center;
+  width: 100%;
+  height: 156px;
+  margin-top: 6px;
   overflow: hidden;
-  font-size: 112px;
+  font-size: 136px;
   font-weight: 900;
   line-height: 1;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--azul);
+  text-shadow:
+    -4px 3px 0 var(--rojo),
+    4px -2px 0 var(--amarillo-x);
+}
+
+.ticket__talento::before,
+.ticket__talento::after {
+  content: attr(data-texto);
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+  text-shadow: none;
+  opacity: 0;
+  animation: 600ms steps(1, end) 450ms both;
+}
+
+.ticket__talento::before {
+  color: var(--rojo);
+  animation-name: talento-sintonia-rojo;
+}
+
+.ticket__talento::after {
+  color: var(--amarillo-x);
+  animation-name: talento-sintonia-amarillo;
+}
+
+/* Arrancan y terminan sin desplazamiento: así no cuentan al medir el ancho (useAjustarTexto). */
+@keyframes talento-sintonia-rojo {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-34px, 6px);
+  }
+  35% {
+    transform: translate(20px, 2px);
+  }
+  55% {
+    transform: translate(-14px, 4px);
+  }
+  75% {
+    transform: translate(6px, 3px);
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes talento-sintonia-amarillo {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  15% {
+    opacity: 1;
+    transform: translate(30px, -4px);
+  }
+  35% {
+    transform: translate(-24px, -2px);
+  }
+  55% {
+    transform: translate(12px, -3px);
+  }
+  75% {
+    transform: translate(-6px, -2px);
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
 }
 
 .ticket__frase {
-  max-width: 760px;
+  max-width: 100%;
+  margin-top: 14px;
   font-size: 42px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
   text-wrap: balance;
 }
 
+/* Marco rojo del QR, como en el boceto. La tarjeta blanca completa la zona blanca del código. */
 .ticket__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 32px 32px;
+  border-radius: 20px;
+  background: var(--rojo);
+}
+
+.ticket__qr-titulo {
+  display: flex;
+  align-items: center;
+  height: 88px;
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--blanco);
+}
+
+.ticket__qr-tarjeta {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 540px;
   height: 540px;
-  padding: 34px;
-  border: 6px solid var(--dorado);
-  border-radius: 36px;
+  border-radius: 14px;
   background: var(--blanco);
 }
 
-.ticket__qr img {
-  width: 460px;
-  height: 460px;
+.ticket__qr-tarjeta img {
+  width: 480px;
+  height: 480px;
 }
 
 .ticket__qr-pendiente {
@@ -608,52 +713,47 @@ p {
   color: var(--azul);
 }
 
-.ticket__juego {
-  padding: 10px 40px;
-  border: 4px solid var(--dorado);
-  border-radius: 999px;
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.ticket__escanea {
+.ticket__descubre {
   display: flex;
   align-items: center;
-  gap: 28px;
-  width: 100%;
-  padding: 24px 40px;
-  border: 4px solid var(--dorado);
-  border-radius: 28px;
-  background: rgba(4, 29, 63, 0.35);
-  text-align: left;
+  justify-content: center;
+  width: max-content;
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
-.ticket__escanea-barra {
-  width: 12px;
-  height: 84px;
-  border-radius: 6px;
+/* Banda de redes: paralelogramo rojo; el contenido se endereza dentro. */
+.ticket__red {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
   background: var(--rojo);
+  color: var(--blanco);
+  transform: skewX(-24deg);
 }
 
-.ticket__escanea-titulo {
-  font-size: 64px;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+.ticket__red-contenido {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transform: skewX(24deg);
 }
 
-.ticket__escanea-division {
-  width: 3px;
-  height: 84px;
-  background: rgba(255, 255, 255, 0.6);
+.ticket__red-icono {
+  width: 56px;
+  height: 56px;
 }
 
-.ticket__escanea-texto {
-  font-size: 36px;
-  font-weight: 500;
-  line-height: 1.15;
+@media (prefers-reduced-motion: reduce) {
+  .ticket__talento::before,
+  .ticket__talento::after {
+    animation: none;
+  }
 }
 
 /* Admin */
@@ -863,8 +963,8 @@ p {
   letter-spacing: -0.01em;
 }
 
-/* Mosaico (components/Mosaico.tsx): cuadros en px del artboard.
-   --retraso: ms para aparecer en la entrada; --d: distancia al centro del rombo (0 a ~1.5). */
+/* Píxeles (components/Pixeles.tsx) de IDLE y del boleto: cuadros en px de su contenedor.
+   --retraso: ms para aparecer en la entrada; --d: distancia al origen de la trama (0 a ~1.5). */
 .mosaico {
   position: absolute;
   inset: 0;
