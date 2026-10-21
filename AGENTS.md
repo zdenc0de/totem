@@ -33,7 +33,7 @@ IDLE (atractor animado, "Toca para comenzar")
   → BOLETO (personalizado + QR) — botón "Terminar"
   → IDLE
 ```
-- **IDLE (atractor del stand):** para que haya movimiento aunque nadie esté jugando, la zona central alterna en loop tres escenas con fundido: el mosaico de marca (7 s), **el coche del simulador** que entra, corre sobre la pista con líneas de velocidad y sale (6 s), y **el guante que golpea la pera** con su destello, tres golpes (6 s). Todo en píxeles del lenguaje de Eliot (`components/Retos.tsx`, `figura.ts`, `Sprite.tsx`) y solo con `transform` y `opacity`. En la bajada se ilumina el juego que está en escena. El borde de píxeles bajo la banda de logos queda fijo.
+- **IDLE (atractor del stand):** para que haya movimiento aunque nadie esté jugando, la zona central alterna en loop tres escenas con fundido: el mosaico de marca (5 s), **el coche del simulador** que entra, corre sobre la pista con líneas de velocidad y sale (6 s), y **el guante que golpea la pera** con su destello, tres golpes (6 s). Todo en píxeles del lenguaje de Eliot (`components/Retos.tsx`, `figura.ts`, `Sprite.tsx`) y solo con `transform` y `opacity`. En la bajada se ilumina el juego que está en escena. El borde de píxeles bajo la banda de logos queda fijo.
 - **Inactividad:** en REGISTRO y QUIZ, a los 45 s sin toques se muestra el modal "¿Sigues ahí?" con una cuenta regresiva de 15 s; si nadie responde, se borra todo y se vuelve a IDLE. Valores en config.
 - **BOLETO:** no usa el modal; regresa solo a IDLE a los 60 s (configurable) o al tocar "Terminar". El botón "Terminar" muestra la cuenta regresiva.
 - **ADMIN:** se cierra directo a IDLE a los 45 s sin toques, sin modal.
