@@ -32,6 +32,15 @@
       "A": "simulador",
       "I": "pera",
       "V": "simulador"
+    },
+    "desempate": {
+      "A-I": "I",
+      "A-V": "A",
+      "I-V": "I",
+      "impulsorDesempataEn": [
+        2,
+        4
+      ]
     }
   },
   "tiempos": {

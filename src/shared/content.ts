@@ -20,7 +20,17 @@ export const contenidoSchema = z.object({
   talentos: z.object({ A: talento, I: talento, V: talento }),
   juegos: z.object({ simulador: juego, pera: juego }),
   reglas: z.object({
-    juegoPorTalento: z.object({ A: juegoId, I: juegoId, V: juegoId })
+    juegoPorTalento: z.object({ A: juegoId, I: juegoId, V: juegoId }),
+    // Quién gana cada empate 2-2-1 (ver Desempate en result.ts).
+    desempate: z.object({
+      'A-I': z.enum(['A', 'I']),
+      'A-V': z.enum(['A', 'V']),
+      'I-V': z.enum(['I', 'V']),
+      impulsorDesempataEn: z
+        .array(z.number().int().min(1).max(5))
+        .max(5)
+        .refine((p) => new Set(p).size === p.length, 'preguntas repetidas')
+    })
   }),
   tiempos: z.object({
     inactividadSeg: segundos,
@@ -65,7 +75,9 @@ export const CONTENIDO_POR_DEFECTO: Contenido = {
     pera: { nombre: 'Pera de box' }
   },
   reglas: {
-    juegoPorTalento: { A: 'simulador', I: 'pera', V: 'simulador' }
+    juegoPorTalento: { A: 'simulador', I: 'pera', V: 'simulador' },
+    // ~51 % a la pera con respuestas al azar (AGENTS.md §6).
+    desempate: { 'A-I': 'I', 'A-V': 'A', 'I-V': 'I', impulsorDesempataEn: [2, 4] }
   },
   tiempos: { inactividadSeg: 45, avisoInactividadSeg: 15, boletoSeg: 60 },
   showGameOnTicket: false,
