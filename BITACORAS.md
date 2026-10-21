@@ -764,3 +764,37 @@ A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las
 - Despliegue de los dos proyectos desde `main` (commit `363843f`): ambos Ready, con sus dominios `totem-talento.vercel.app` y `totem-talento-demo.vercel.app`.
 - Página del QR: `/`, `/acelerador`, `/impulsor` y `/reflejo` responden 200 con el rediseño (`assets/…`), sin recursos rotos ni errores de JS (iPhone emulado). `package.json`, `src/…` y `.env.local` responden 404: solo se publica `web/`.
 - Demo: flujo completo sobre la URL publicada (registro → quiz → boleto con QR a `/reflejo` → panel con PIN → Excel y CSV correctos), sin errores en consola; `package.json` y `src/…` responden 404.
+
+## 2026-10-20 — Desempate a favor de la pera y atractor con los retos en acción
+
+**Fase:** cambios del cliente tras la primera revisión.
+
+### Por qué "casi no salía Acelerador"
+- No era un error. Al revisar la demo se contestó siempre "la primera opción" esperando Acelerador, pero las opciones se barajan en cada pregunta (§5): la primera opción es de un talento al azar.
+- Con respuestas al azar, la regla anterior (todo empate 2-2-1 → Reflejo) daba Reflejo 58 %, Acelerador 21 %, Impulsor 21 %, y solo el 21 % a la pera. El 37 % de las combinaciones son empates y todos iban a Reflejo, incluso el empate Acelerador-Impulsor.
+
+### Nueva regla de desempate (configurable)
+- El cliente pidió mantener las opciones al azar y que más gente termine en la pera (es el juego más rápido).
+- `reglas.desempate` en `content.json`:
+  - Empates A-I e I-V → Impulsor (pera).
+  - Empate A-V → Impulsor si su única respuesta Impulsor está en `impulsorDesempataEn` (hoy `[2, 4]`); si no, Acelerador.
+- Con respuestas al azar: **pera 50.6 %**, simulador 49.4 %; Acelerador 28.4 %, Impulsor 50.6 %, Reflejo 21.0 %. Cada pregunta que se agregue a `impulsorDesempataEn` sube la pera ~2.5 puntos (hasta 58 %) sin reinstalar.
+- `result.ts`: `desempatar()`; esquema en `content.ts` (cada par solo acepta a sus dos talentos y las preguntas van de 1 a 5, sin repetir).
+
+### Pantalla inicial: los retos en acción
+- La zona central de IDLE alterna en loop, con fundido: el mosaico de marca (7 s), el coche del simulador (6 s) y la pera de box (6 s).
+  - Simulador: coche de píxeles que entra, corre en su lugar con las ruedas girando, rebote, líneas de velocidad y la pista moviéndose, con bandera a cuadros ondeando, y sale disparado.
+  - Pera: guante que golpea tres veces por escena, la pera oscila desde su cadena y salta un destello en cada golpe.
+  - Los nombres "¡Simulador de carreras!" y "¡Pera de box!" entran con el mismo desfase de color del boleto, y en la bajada se ilumina el juego en escena.
+- Todo en píxeles del lenguaje de Eliot, dibujados en código (`components/figura.ts`, `Sprite.tsx`, `Retos.tsx`): sin imágenes nuevas, sin red. Solo `transform` y `opacity`, en loops CSS.
+- El borde de píxeles bajo la banda de logos (`BordeBanda`) queda fijo mientras cambian las escenas.
+- README: activar los efectos de animación de Windows en el tótem (si no, el mosaico se queda quieto).
+
+**Archivos:** `src/shared/{result,content}.ts`, `src/shared/result.test.ts`, `resources/content.json`, `src/renderer/screens/Idle.tsx`, `src/renderer/components/{Retos,Sprite,Mosaico}.tsx`, `src/renderer/components/figura.ts` y `figura.test.ts` (nuevos), `src/renderer/styles/global.css`, `AGENTS.md` (§4, §6 y §12) y `README.md`.
+
+### Verificación
+- 193 pruebas pasan: 16 casos fijos del desempate, la distribución sobre las 243 combinaciones (A 69, I 123, V 51; 123 a la pera), la escalera de `impulsorDesempataEn` (111 / 117 / 123 / 129 / 141 a la pera) y el dibujante de píxeles. Typecheck (node, web y demo), lint y build de la demo limpios.
+- App compilada: ciclo completo mosaico → simulador → pera → mosaico capturado en pantalla; las tres escenas corren a la frecuencia del monitor (145 fps en la máquina de desarrollo) y no invaden el titular (escenas hasta y = 1060, titular desde y = 1118).
+
+### Pendientes
+- Verlo en el tótem real (hardware desconocido) y con el cliente en la demo.
