@@ -1054,3 +1054,346 @@ p {
   box-shadow: 0 0 0 4px var(--blanco);
   pointer-events: none;
 }
+
+/* ---------- IDLE: loop de escenas (screens/Idle.tsx) ---------- */
+.idle__escena {
+  position: absolute;
+  inset: 0;
+}
+
+/* El juego de la escena en curso se ilumina en la bajada. */
+.idle__juego {
+  transition: color 400ms ease-out;
+}
+
+.idle__juego--activo {
+  color: var(--amarillo-x);
+}
+
+/* ---------- Retos en acción (components/Retos.tsx) ----------
+   Zona central de IDLE, entre la banda de logos y el titular. Solo transform y opacity, en loops
+   CSS (corren en el compositor). No se apagan con "reducir movimiento": es un atractor de stand. */
+.retos {
+  position: absolute;
+  top: 200px;
+  left: 0;
+  width: 1080px;
+  height: 860px;
+  overflow: hidden;
+}
+
+.retos svg {
+  display: block;
+}
+
+.retos__nombre {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  isolation: isolate;
+  margin: 0;
+  font-size: 92px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--amarillo-x);
+  text-shadow:
+    -4px 3px 0 var(--rojo),
+    4px -2px 0 var(--blanco);
+  animation: retos-nombre 700ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 250ms both;
+}
+
+/* El mismo desfase de color que el nombre del talento en el boleto. */
+.retos__nombre::before,
+.retos__nombre::after {
+  content: attr(data-texto);
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  text-shadow: none;
+  opacity: 0;
+  animation: 600ms steps(1, end) 950ms both;
+}
+
+.retos__nombre::before {
+  color: var(--rojo);
+  animation-name: talento-sintonia-rojo;
+}
+
+.retos__nombre::after {
+  color: var(--blanco);
+  animation-name: talento-sintonia-amarillo;
+}
+
+@keyframes retos-nombre {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Simulador: el coche entra, corre en su lugar con la pista moviéndose y sale disparado. */
+.retos__pista {
+  position: absolute;
+  left: 0;
+  top: 600px;
+  width: 1320px;
+  height: 14px;
+  animation: retos-pista 260ms linear infinite;
+}
+
+.retos__raya {
+  position: absolute;
+  top: 0;
+  width: 72px;
+  height: 14px;
+  background: var(--blanco);
+  opacity: 0.85;
+}
+
+@keyframes retos-pista {
+  to {
+    transform: translateX(-120px);
+  }
+}
+
+.retos__bandera {
+  position: absolute;
+  right: 72px;
+  top: 64px;
+  width: 210px;
+  height: 330px;
+}
+
+.retos__asta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 330px;
+  background: var(--negro-20);
+}
+
+.retos__bandera-tela {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  transform-origin: 0 50%;
+  animation: retos-ondear 700ms ease-in-out infinite alternate;
+}
+
+@keyframes retos-ondear {
+  from {
+    transform: skewY(-6deg) scaleX(0.96);
+  }
+  to {
+    transform: skewY(5deg) scaleX(1);
+  }
+}
+
+.retos__coche {
+  position: absolute;
+  left: 170px;
+  top: 330px;
+  width: 740px;
+  height: 260px;
+  animation: retos-coche 6s both;
+}
+
+@keyframes retos-coche {
+  0% {
+    transform: translateX(-1250px);
+    animation-timing-function: cubic-bezier(0.15, 0.8, 0.3, 1);
+  }
+  20% {
+    transform: translateX(0);
+    animation-timing-function: ease-in-out;
+  }
+  45% {
+    transform: translateX(-24px);
+    animation-timing-function: ease-in-out;
+  }
+  70% {
+    transform: translateX(16px);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4);
+  }
+  100% {
+    transform: translateX(1400px);
+  }
+}
+
+.retos__rebote {
+  position: relative;
+  width: 740px;
+  height: 260px;
+  animation: retos-rebote 180ms ease-in-out infinite alternate;
+}
+
+@keyframes retos-rebote {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+.retos__rueda {
+  position: absolute;
+  top: 144px;
+  animation: retos-girar 300ms linear infinite;
+}
+
+.retos__rueda--trasera {
+  left: 84px;
+}
+
+.retos__rueda--delantera {
+  left: 524px;
+}
+
+/* Las ruedas son más chicas que el coche: se dibujan con celda de 20 y se reducen. */
+.retos__rueda {
+  width: 112px;
+  height: 112px;
+}
+
+@keyframes retos-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retos__velocidad {
+  position: absolute;
+  left: -250px;
+  width: 210px;
+  height: 12px;
+  background: var(--blanco);
+  animation: retos-velocidad 520ms linear calc(var(--i) * 95ms) infinite;
+}
+
+.retos__velocidad:nth-child(odd) {
+  background: var(--amarillo-x);
+}
+
+@keyframes retos-velocidad {
+  from {
+    opacity: 0.95;
+    transform: translateX(0) scaleX(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-180px) scaleX(0.4);
+  }
+}
+
+/* Pera: el guante golpea, la pera oscila y salta el destello; tres golpes por escena. */
+.retos__soporte {
+  position: absolute;
+  left: 460px;
+  top: 100px;
+}
+
+.retos__pera {
+  position: absolute;
+  left: 520px;
+  top: 160px;
+  width: 360px;
+  height: 600px;
+  transform-origin: 180px 0;
+  animation: retos-pera 1.8s 200ms infinite;
+}
+
+@keyframes retos-pera {
+  0%,
+  9% {
+    transform: rotate(0);
+  }
+  14% {
+    transform: rotate(-17deg);
+  }
+  30% {
+    transform: rotate(10deg);
+  }
+  46% {
+    transform: rotate(-6deg);
+  }
+  62% {
+    transform: rotate(3deg);
+  }
+  78%,
+  100% {
+    transform: rotate(0);
+  }
+}
+
+.retos__guante {
+  position: absolute;
+  left: 247px;
+  top: 380px;
+  width: 308px;
+  height: 220px;
+  animation: retos-guante 1.8s 200ms infinite both;
+}
+
+@keyframes retos-guante {
+  0% {
+    transform: translateX(-620px);
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+  }
+  10% {
+    transform: translateX(0);
+    animation-timing-function: ease-out;
+  }
+  16% {
+    transform: translateX(-50px);
+    animation-timing-function: ease-in;
+  }
+  36%,
+  100% {
+    transform: translateX(-620px);
+  }
+}
+
+.retos__estela {
+  position: absolute;
+  left: -230px;
+  width: 200px;
+  height: 14px;
+  background: var(--blanco);
+  opacity: 0.7;
+}
+
+.retos__estela:nth-child(2) {
+  background: var(--amarillo-x);
+}
+
+.retos__golpe {
+  position: absolute;
+  left: 471px;
+  top: 409px;
+  opacity: 0;
+  animation: retos-golpe 1.8s 200ms infinite;
+}
+
+@keyframes retos-golpe {
+  0%,
+  9% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  26%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}

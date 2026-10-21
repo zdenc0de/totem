@@ -182,7 +182,14 @@ function calcularCuadros(): Cuadro[] {
 }
 
 const CUADROS = calcularCuadros()
+// El borde de la banda de logos se queda fijo; el resto se alterna con las escenas de los retos.
+const BORDE = CUADROS.filter((c) => c.tipo === 'borde')
+const ESCENA = CUADROS.filter((c) => c.tipo !== 'borde')
 
 export function Mosaico(): React.JSX.Element {
-  return <Pixeles cuadros={CUADROS} />
+  return <Pixeles cuadros={ESCENA} />
+}
+
+export function BordeBanda(): React.JSX.Element {
+  return <Pixeles cuadros={BORDE} />
 }
