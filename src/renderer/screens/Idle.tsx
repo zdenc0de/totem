@@ -10,7 +10,7 @@ import type { ScreenProps } from './types'
 // Atractor: toda la pantalla es el botón. Para que el stand se vea vivo aunque nadie esté
 // jugando, la zona central alterna en loop el mosaico de marca y los dos retos en acción.
 const ESCENAS = [
-  { id: 'mosaico', ms: 7000 },
+  { id: 'mosaico', ms: 5000 },
   { id: 'simulador', ms: 6000 },
   { id: 'pera', ms: 6000 }
 ] as const

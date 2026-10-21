@@ -948,6 +948,7 @@ p {
   font-weight: 900;
   line-height: 0.98;
   letter-spacing: -0.035em;
+  text-align: center;
 }
 
 .idle__bajada {
