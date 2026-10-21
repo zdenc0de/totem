@@ -33,6 +33,7 @@ IDLE (atractor animado, "Toca para comenzar")
   → BOLETO (personalizado + QR) — botón "Terminar"
   → IDLE
 ```
+- **IDLE (atractor del stand):** para que haya movimiento aunque nadie esté jugando, la zona central alterna en loop tres escenas con fundido: el mosaico de marca (7 s), **el coche del simulador** que entra, corre sobre la pista con líneas de velocidad y sale (6 s), y **el guante que golpea la pera** con su destello, tres golpes (6 s). Todo en píxeles del lenguaje de Eliot (`components/Retos.tsx`, `figura.ts`, `Sprite.tsx`) y solo con `transform` y `opacity`. En la bajada se ilumina el juego que está en escena. El borde de píxeles bajo la banda de logos queda fijo.
 - **Inactividad:** en REGISTRO y QUIZ, a los 45 s sin toques se muestra el modal "¿Sigues ahí?" con una cuenta regresiva de 15 s; si nadie responde, se borra todo y se vuelve a IDLE. Valores en config.
 - **BOLETO:** no usa el modal; regresa solo a IDLE a los 60 s (configurable) o al tocar "Terminar". El botón "Terminar" muestra la cuenta regresiva.
 - **ADMIN:** se cierra directo a IDLE a los 45 s sin toques, sin modal.
@@ -59,7 +60,11 @@ Entrada: arreglo de 5 respuestas, cada una `'A' | 'I' | 'V'` (índice 0 = pregun
 **Paso 1 — Talento**
 - Contar A, I y V.
 - Si un talento tiene el máximo **único** → ese talento.
-- Si hay empate en el máximo (solo puede ser 2-2-1) → **V (Reflejo)**, con `desempate = true`.
+- Si hay empate en el máximo (solo puede ser 2-2-1), con `desempate = true` (cambió el 20 oct: el cliente quiere más gente en la pera, que es el juego más rápido; antes todo empate iba a Reflejo y Reflejo salía el 58 % de las veces):
+  - Empate en el que está Impulsor (A-I o I-V) → **I (Impulsor)**.
+  - Empate Acelerador-Reflejo (A-V) → **I** si su única respuesta Impulsor está en una de las preguntas de `reglas.desempate.impulsorDesempataEn` (hoy Q2 y Q4); si no, **A (Acelerador)**.
+  - Todo va en config (`reglas.desempate`). Cada pregunta agregada a `impulsorDesempataEn` manda ~2.5 % más de las combinaciones a la pera: `[]` 45.7 %, `[2]` 48.1 %, `[2, 4]` 50.6 %, 3 preguntas 53.1 %, 4 preguntas 55.6 %, las 5 58 % (con respuestas al azar).
+- Las opciones se barajan en cada pregunta (§5): elegir siempre "la primera opción" no equivale a elegir siempre un talento.
 
 **Paso 2 — Juego** (cada talento va siempre al mismo juego; confirmado por el cliente el 14 oct y coincide con las imágenes de `assets/tickets/tipoJuego/`)
 - `A` (Acelerador) → `simulador`
@@ -67,7 +72,7 @@ Entrada: arreglo de 5 respuestas, cada una `'A' | 'I' | 'V'` (índice 0 = pregun
 - `V` (Reflejo) → `simulador`, también cuando gana por desempate.
 - (Garantía: cuando el resultado es V, siempre hay al menos 1 respuesta V.)
 
-El juego por talento va en config (§12, `reglas.juegoPorTalento`), no fijo en el código.
+El juego por talento y el desempate van en config (§12, `reglas.juegoPorTalento` y `reglas.desempate`), no fijos en el código.
 
 **Casos de prueba obligatorios** (respuestas Q1..Q5 → talento / juego):
 | Respuestas | Talento | Juego |
@@ -75,15 +80,17 @@ El juego por talento va en config (§12, `reglas.juegoPorTalento`), no fijo en e
 | A A A I V | A | simulador |
 | I I I A V | I | pera |
 | V V V A I | V | simulador |
-| A A I I V | V (empate) | simulador |
-| V A A I I | V (empate) | simulador |
-| A V I I A | V (empate) | simulador |
-| V V A A I | V (empate) | simulador |
-| V A V A I | V (empate) | simulador |
 | V V V V V | V | simulador |
 | I I I I I | I | pera |
+| A A I I V | I (empate A-I) | pera |
+| A V I I A | I (empate A-I) | pera |
+| I I V V A | I (empate I-V) | pera |
+| A I V V A | I (empate A-V, su I en Q2) | pera |
+| V A V I A | I (empate A-V, su I en Q4) | pera |
+| V V A A I | A (empate A-V, su I en Q5) | simulador |
+| I A A V V | A (empate A-V, su I en Q1) | simulador |
 
-Agregar una prueba que recorra las 243 combinaciones y verifique: siempre hay resultado, el juego siempre es válido y la distribución es 192 simulador / 51 pera (A 51, I 51, V 141).
+Agregar una prueba que recorra las 243 combinaciones y verifique: siempre hay resultado, el juego siempre es válido y la distribución es 120 simulador / 123 pera (A 69, I 123, V 51).
 
 ## 7. Boleto (pantalla de resultado)
 Referencia visual: los bocetos del cliente (`assets/boletos_boceto/1.png`, `2.png` y `3.png`). Boleto vertical de papel blanco con reflejos diagonales en Black 10 %, borde Yellow X, pestaña arriba al centro y una muesca a cada lado. Las tramas de puntos de las esquinas del boceto se hacen con el mismo mosaico de píxeles de IDLE: azul CONAIP a la izquierda y amarillo Eliot a la derecha.
@@ -183,7 +190,8 @@ Se empaqueta como `extraResources` y se lee al arrancar, para poder cambiar text
     "pera":      { "nombre": "Pera de box" }
   },
   "reglas": {
-    "juegoPorTalento": { "A": "simulador", "I": "pera", "V": "simulador" }
+    "juegoPorTalento": { "A": "simulador", "I": "pera", "V": "simulador" },
+    "desempate": { "A-I": "I", "A-V": "A", "I-V": "I", "impulsorDesempataEn": [2, 4] }
   },
   "tiempos": { "inactividadSeg": 45, "avisoInactividadSeg": 15, "boletoSeg": 60 },
   "showGameOnTicket": false,

@@ -103,6 +103,7 @@ Cada QR del boleto abre la página de su talento, con la imagen de su reto y dos
    - Desactivar la aparición automática del teclado táctil.
    - Inicio de sesión automático.
    - Escalado de pantalla al 100 % y barra de tareas oculta.
+   - **Efectos de animación activados** (Configuración → Accesibilidad → Efectos visuales). Si están apagados, el mosaico de la pantalla de inicio se queda quieto.
    - **Fecha, hora y zona horaria correctas** (sin internet no se sincronizan solas).
 3. En el panel admin:
    - Elegir **T1** en un tótem y **T2** en el otro (hasta entonces el panel avisa "ID sin confirmar").
