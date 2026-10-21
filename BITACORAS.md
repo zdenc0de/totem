@@ -799,14 +799,14 @@ A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las
 ### Pendientes
 - Verlo en el tótem real (hardware desconocido) y con el cliente en la demo.
 
-## 2026-10-20 — Atractor más ágil y titular centrado
+## 2026-10-20 — Atractor más ágil y textos de IDLE centrados
 
 **Fase:** cambios del cliente.
 
 - El mosaico de marca dura 5 s en el loop de IDLE (antes 7 s), para que el ciclo se sienta más fluido: mosaico 5 s → simulador 6 s → pera 6 s (17 s por vuelta).
-- El titular "Descubre tu talento y acepta el reto" va centrado.
+- El titular "Descubre tu talento y acepta el reto" y la bajada "5 preguntas deciden tu reto…" van centrados (la bajada sola a la izquierda se veía dispareja).
 
 **Archivos:** `src/renderer/screens/Idle.tsx`, `src/renderer/styles/global.css` y `AGENTS.md` (§4).
 
 ### Verificación
-- App compilada: escenas en 0–5 s mosaico, 5–11 s simulador, 11–17 s pera y de vuelta al mosaico; 144 fps; titular centrado (captura revisada).
+- App compilada: escenas en 0–5 s mosaico, 5–11 s simulador, 11–17 s pera y de vuelta al mosaico; 144 fps; titular y bajada centrados (capturas revisadas).
