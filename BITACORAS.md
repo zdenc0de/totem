@@ -810,3 +810,27 @@ A petición del cliente, el boleto y su pantalla ya no usan colores fuera de las
 
 ### Verificación
 - App compilada: escenas en 0–5 s mosaico, 5–11 s simulador, 11–17 s pera y de vuelta al mosaico; 144 fps; titular y bajada centrados (capturas revisadas).
+
+## 2026-10-21 — Una sola memoria para los dos tótems y versión 0.2.0 para la prueba
+
+**Fase:** prueba en los tótems reales.
+
+- Escenario de hoy: una sola memoria para instalar en los dos tótems; uno se queda con ella como respaldo y el otro trabaja sin memoria (sus registros quedan en su disco y se exportan al final).
+- Riesgo encontrado: un tótem recién instalado arranca como T1 sin confirmar. Si la memoria del otro tótem llegaba antes de elegir T2 y ya había registros, escribía en `registros_T1.jsonl` y regeneraba `registros_T1.xlsx` solo con sus registros, tapando los del otro.
+- `respaldo.ts`:
+  - **No escribe en la memoria hasta que el ID esté confirmado** (`idConfirmado`; error `SIN_ID`, el panel dice "Elige T1 o T2 para empezar a copiar los registros" y la alerta de IDLE sigue encendida).
+  - El Excel de la memoria se arma con **todo lo que contiene el archivo de la memoria**, no solo con lo del tótem conectado.
+  - El Excel se regenera **con cada registro** (antes cada 10 o cada 30 s): si retiran la memoria justo después de un registro, el Excel ya lo tiene.
+- Versión 0.2.0 (`package.json` y `package-lock.json`). Instalador `dist/totem-talento-0.2.0-setup.exe` copiado a la memoria (`TotemTalento-instalador\`) con un `LEEME.txt`: instalación, configuración de Windows, orden ID → memoria, tótem sin memoria, pruebas y cómo borrar los registros de prueba antes del evento.
+
+**Archivos:** `src/main/{respaldo,index}.ts`, `src/main/respaldo.test.ts`, `src/renderer/screens/Admin.tsx`, `package.json`, `package-lock.json`, `AGENTS.md` (§9) y `README.md`.
+
+### Verificación
+- 195 pruebas pasan (2 nuevas: no escribe sin ID confirmado; el Excel incluye lo que ya traía el archivo). Typecheck y lint limpios.
+- Simulación de dos tótems con la memoria física D: (dos carpetas de datos): A prepara la memoria, elige T1 y registra 3 → T1 con 3 líneas y 3 filas. B registra 2 sin ID → la memoria no cambia (T1 sigue con 3/3) y B marca `SIN_ID` con alerta. B elige T2 → `registros_T2` con 2/2 y T1 intacto. Cero errores; la memoria quedó como estaba.
+- Estrés de 1500 registros con la memoria física y Excel por registro: 1500 idénticos en las 7 copias, muerte del proceso a media ráfaga (815 completos al reabrir) y memoria retirada y reconectada (al día en 15 s). Mediana 3.8 ms por registro. Cero errores.
+- Instalador 0.2.0: el paquete trae el desempate nuevo, las URLs de los QR, el atractor y la protección del ID; la copia en la memoria es idéntica (SHA-256).
+
+### Pendientes
+- Resultados de la prueba en los tótems reales.
+- Antes del evento: borrar los registros de prueba de los dos tótems y de la memoria (pasos en el LEEME).

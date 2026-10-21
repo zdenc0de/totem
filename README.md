@@ -39,7 +39,8 @@ Todo vive en `%APPDATA%\Totem Talento\`:
 Cada tótem lleva una USB fija con la carpeta `TotemRespaldo` en su raíz (se crea desde el panel con "Preparar USB"). Ahí se mantienen:
 
 - `registros_T1.jsonl`: cada registro se copia en el momento en que se guarda.
-- `registros_T1.xlsx` y `registros_T1.csv`: listos para abrir; se regeneran cada 10 registros o cada 30 s y nunca quedan a medias.
+- `registros_T1.xlsx` y `registros_T1.csv`: listos para abrir; se regeneran con cada registro y nunca quedan a medias.
+- Cada tótem escribe sus propios archivos (`registros_T1…` o `registros_T2…`), así que una misma memoria puede pasar de un tótem a otro. **Nada se escribe en la memoria hasta elegir T1 o T2 en el panel.**
 
 Si la USB se retira, el tótem sigue funcionando y muestra un punto rojo pequeño en la esquina inferior derecha de la pantalla de inicio; al reconectarla se pone al día sola. Si el tótem se daña, basta con sacar la USB. Solo se escribe en una unidad con esa carpeta, nunca en el disco del sistema.
 
