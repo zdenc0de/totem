@@ -147,7 +147,10 @@ function Panel({ estado, recargar, onCambiarPin, onCerrar }: PanelProps): React.
     estado.qrPendiente.length > 0 &&
       `QR pendiente: ${estado.qrPendiente.map((t) => talentos[t].nombre).join(', ')}.`,
     !estado.respaldo.unidad && 'Sin USB de respaldo: los registros solo están en este tótem.',
-    estado.respaldo.error && 'Falló la copia a la USB de respaldo.',
+    // Sin ID confirmado la USB espera a propósito; ese caso ya lo cubre el aviso del ID.
+    estado.respaldo.error &&
+      estado.respaldo.error !== 'SIN_ID' &&
+      'Falló la copia a la USB de respaldo.',
     estado.fallosGuardado > 0 &&
       `${estado.fallosGuardado} registro(s) no se pudieron guardar. Revisa el disco del tótem.`
   ].filter((a): a is string => Boolean(a))
@@ -267,6 +270,8 @@ function fechaHora(iso: string): string {
 function textoRespaldo(r: EstadoRespaldo): string {
   if (!r.unidad)
     return 'No hay USB de respaldo. Conecta la USB con la carpeta TotemRespaldo o prepárala.'
+  if (r.error === 'SIN_ID')
+    return `USB ${r.unidad} detectada. Elige T1 o T2 para empezar a copiar los registros.`
   if (r.error)
     return `La USB ${r.unidad} falló (${r.error}). Revisa que no esté llena ni protegida.`
   const excel = r.excelActualizado

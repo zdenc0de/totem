@@ -3,9 +3,10 @@
 //
 // - Solo se usa una unidad que tenga la carpeta `TotemRespaldo` en su raíz (nunca la del sistema),
 //   así no se escribe en cualquier USB que alguien conecte.
-// - Cada registro se agrega a `registros_{T1}.jsonl` con fsync, igual que en el disco.
+// - Cada registro se agrega a `registros_{T1}.jsonl` con fsync, igual que en el disco. No se
+//   escribe nada hasta que el ID del tótem esté confirmado (error SIN_ID en el panel).
 // - Si la USB se desconecta, el tótem sigue funcionando; al volver, se copian los que falten.
-// - `registros_{T1}.xlsx` y `.csv` se regeneran cada `excelCada` registros (10) o cada `excelMs` (30 s),
+// - `registros_{T1}.xlsx` y `.csv` se regeneran con cada registro (`excelCada`, `excelMs` configurables),
 //   con archivo temporal + rename: nunca quedan a medias.
 // No depende de Electron para poder probarse con Vitest.
 import { existsSync, mkdirSync } from 'fs'
@@ -18,6 +19,8 @@ import { agregarLineas, leerJsonl, sinLog, type Logger } from './storage'
 import { escribirExport, tablaExport } from './export'
 
 export const CARPETA_RESPALDO = 'TotemRespaldo'
+/** Código de `estado().error` mientras falta confirmar el ID del tótem. */
+export const SIN_ID = 'SIN_ID'
 
 export type OpcionesRespaldo = {
   /** Raíces de unidad candidatas (p. ej. "D:\\"). */
@@ -26,6 +29,11 @@ export type OpcionesRespaldo = {
   raizSistema: string
   registros: () => Registro[]
   totemId: () => TotemId
+  /**
+   * `false` mientras nadie haya elegido T1 o T2 en el panel: un tótem recién instalado arranca
+   * como T1 y, si la memoria viene del otro tótem, escribiría en el archivo equivocado.
+   */
+  idConfirmado: () => boolean
   contenido: Contenido
   log?: Logger
   excelCada?: number
@@ -43,7 +51,9 @@ export type Respaldo = {
 
 export function crearRespaldo(op: OpcionesRespaldo): Respaldo {
   const log = op.log ?? sinLog
-  const excelCada = op.excelCada ?? 10
+  // Con cada registro: generar el Excel tarda ~0.15 s y la gente pasa cada minuto, así la
+  // memoria siempre tiene el Excel al día aunque la retiren justo después de un registro.
+  const excelCada = op.excelCada ?? 1
   const excelMs = op.excelMs ?? 30_000
   const ahora = op.ahora ?? (() => new Date())
   const sistema = normalizarRaiz(op.raizSistema)
@@ -84,6 +94,13 @@ export function crearRespaldo(op: OpcionesRespaldo): Respaldo {
       return
     }
 
+    if (!op.idConfirmado()) {
+      if (error !== SIN_ID) log.warn('USB de respaldo en espera: falta confirmar el ID del tótem')
+      error = SIN_ID
+      cache = null
+      return
+    }
+
     const id = op.totemId()
     const dir = join(raiz, CARPETA_RESPALDO)
     const archivo = join(dir, `registros_${id}.jsonl`)
@@ -112,7 +129,10 @@ export function crearRespaldo(op: OpcionesRespaldo): Respaldo {
           sinExcel >= excelCada ||
           (sinExcel > 0 && t - ultimoExcelMs >= excelMs))
       if (tocaExcel) {
-        await escribirExport(dir, base, tablaExport(todos, op.contenido))
+        // Con todo lo que tiene el archivo de la USB (ya incluye lo de este tótem), no solo con lo
+        // local: si la memoria trae registros que este tótem no tiene, el Excel no los pierde.
+        const enArchivo = leerJsonl(archivo, log)
+        await escribirExport(dir, base, tablaExport(enArchivo, op.contenido))
         sinExcel = 0
         excelPendiente = false
         ultimoExcelMs = t

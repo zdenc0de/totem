@@ -74,6 +74,7 @@ async function iniciar(): Promise<void> {
     raizSistema: process.env['SystemDrive'] ?? 'C:',
     registros: storage.leerTodos,
     totemId: () => settings.leer().totemId,
+    idConfirmado: () => settings.leer().idConfirmado,
     contenido: cargado.contenido,
     log
   })

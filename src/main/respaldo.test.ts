@@ -14,7 +14,7 @@ import { join, parse } from 'path'
 import ExcelJS from 'exceljs'
 import type { Registro, TotemId } from '@shared/types'
 import { CONTENIDO_POR_DEFECTO } from '@shared/content'
-import { CARPETA_RESPALDO, crearRespaldo, type OpcionesRespaldo } from './respaldo'
+import { CARPETA_RESPALDO, crearRespaldo, SIN_ID, type OpcionesRespaldo } from './respaldo'
 
 let raiz: string
 let usb: string
@@ -56,6 +56,7 @@ const respaldo = (cambios: Partial<OpcionesRespaldo> = {}): ReturnType<typeof cr
     raizSistema: 'Q:\\',
     registros: () => registros,
     totemId: () => totemId,
+    idConfirmado: () => true,
     contenido: CONTENIDO_POR_DEFECTO,
     excelCada: 10,
     excelMs: 60_000,
@@ -224,6 +225,32 @@ describe('respaldo en USB', () => {
     await r.sincronizar()
     expect(idsEnUsb('T2')).toEqual(['id-1'])
     expect(existsSync(join(dirUsb(), 'registros_T2.xlsx'))).toBe(true)
+  })
+
+  it('no escribe en la USB hasta que se confirme el ID del tótem', async () => {
+    mkdirSync(dirUsb())
+    let confirmado = false
+    const r = respaldo({ idConfirmado: () => confirmado })
+    registros.push(registro(1))
+    await r.sincronizar()
+    expect(readdirSync(dirUsb())).toEqual([])
+    expect(r.estado()).toMatchObject({ unidad: usb, error: SIN_ID, enUsb: 0 })
+
+    confirmado = true
+    await r.sincronizar()
+    expect(idsEnUsb()).toEqual(['id-1'])
+    expect(r.estado()).toMatchObject({ error: null, enUsb: 1 })
+  })
+
+  it('el Excel de la USB incluye lo que ya traía el archivo, no solo lo de este tótem', async () => {
+    mkdirSync(dirUsb())
+    // La memoria ya trae un registro que este tótem no tiene.
+    appendFileSync(join(dirUsb(), 'registros_T1.jsonl'), JSON.stringify(registro(100)) + '\n')
+    const r = respaldo()
+    registros.push(registro(1))
+    await r.sincronizar()
+    expect(idsEnUsb()).toEqual(['id-100', 'id-1'])
+    expect(await filasExcel()).toBe(2)
   })
 
   it('nunca usa la unidad del sistema', async () => {
